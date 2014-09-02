@@ -20,13 +20,13 @@
 #ifndef GEOMETRY_2D_HPP_
 #define GEOMETRY_2D_HPP_
 
-#include "hpfem_base.hpp"
+#include "shfem_base.hpp"
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <cmath>
 
-namespace hpfem {
+namespace shfem {
   
   //,---------
   //| Point 2D

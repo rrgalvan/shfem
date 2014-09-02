@@ -1,6 +1,6 @@
 HPFEM_SRCDIR=..
 
-ALL: test_read_msh #test_fespace
+ALL: test_read_msh test_fespace
 
 #REMARK: 
 # It is important to locate "-lboost_unit_test_framework" at end of line,

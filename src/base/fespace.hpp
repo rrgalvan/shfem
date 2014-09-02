@@ -1,4 +1,4 @@
-// hpfem_base.hpp --- 
+// fespace.hpp --- 
 
 // Copyright (C) 2014 Rafa Rodríguez Galván <rafaelDOTrodriguezATucaDOTes>
 
@@ -17,14 +17,28 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HPFEM_BASE_HPP_
-#define HPFEM_BASE_HPP_
+#ifndef FESPACE_HPP_
+#define FESPACE_HPP_
 
-#include "hpfem_base.hpp"
+#include "geometry_2d.hpp"
 
-namespace hpfem {
-  typedef double real_t;
-  typedef unsigned index_t;
+namespace shfem {
+
+  /// Base class for Finite Element spaces on a given 2d mesh
+  /// TODO: make mesh type a template argument
+  class BaseFESpace {
+  protected:
+    BaseFESpace(Mesh const& m): mesh(&m) {}
+    Mesh const* mesh;
+  };
+
+  /// Continous Galerkin ($P_k$--Lagrange) Finite Element spaces
+  class CG_FESpace: 
+    public BaseFESpace
+  {
+  public:
+    CG_FESpace(Mesh const& m): BaseFESpace(m) {}
+  };
+  
 }
-
-#endif // HPFEM_BASE_HPP_
+#endif // FESPACE_HPP_

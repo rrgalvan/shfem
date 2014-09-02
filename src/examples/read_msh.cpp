@@ -17,19 +17,21 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#include <hpfem.hpp>
+#include <shfem.hpp>
+#include <cstdlib>
 
 int main()
 {
   // Build an empty mesh object
-  hpfem::Mesh m;
+  shfem::Mesh m;
   
   // Try to read mesh contents from a .msh file (for information about the
   // structure of these files, see FreeFem++ documentation).
-  try{
+  try {
     m.read_file_msh("squared-mesh-2x2.msh");
   } catch (...) {
     std::cerr << "Error reading mesh file" << std::endl;
+    exit(1);
   }
 
   // Show information about triangles and vertices

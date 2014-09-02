@@ -1,4 +1,4 @@
-#include <hpfem.hpp>
+#include <shfem.hpp>
 
 // Boost test suite library.
 // Enable dynamic linking with -lboost_unit_test_framework
@@ -8,18 +8,18 @@
 
 BOOST_AUTO_TEST_CASE(MeshReadInOrder)
 {
-  hpfem::Mesh m;
+  shfem::Mesh m;
   m.read_file_msh("squared-mesh-2x2.msh");
-  m.print();
-  
+
+  unsigned nb_triangles = m.get_nt(), expected_nb_triangles = 8;
+  BOOST_CHECK_EQUAL(nb_triangles, expected_nb_triangles);
+
+  unsigned nb_vertices = m.get_nv(), expected_nb_vertices = 9;
+  BOOST_CHECK_EQUAL(nb_vertices, expected_nb_vertices);
+
   for(unsigned i=0; i<m.get_nt(); ++i) {
-    hpfem::real_t
-      current_area = m.area(i), 
-      expected_area = 0.5;
-    std::cout << "Area of triangle " << i << ": "
-	      << current_area << std::endl; 
-    
-    // Check that floating point values differ no more 
+    shfem::real_t current_area = m.area(i), expected_area = 0.5;
+    // Check that the two floating point values differ no more 
     // than 0.0000000001 of their value.
     BOOST_CHECK_CLOSE(current_area, expected_area, 1.e-10);
   }
