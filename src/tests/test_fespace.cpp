@@ -11,4 +11,7 @@ BOOST_AUTO_TEST_CASE(MeshReadInOrder)
   shfem::Mesh m;
   m.read_file_msh("squared-mesh-2x2.msh");
   shfem::CG_FESpace fe(m);
+  fe.get_mesh();
+  
+  shfem::QuadRule<shfem::VerticesQR> Q;
 }

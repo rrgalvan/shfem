@@ -1,13 +1,24 @@
-HPFEM_SRCDIR=..
+# gcc compiler
+GCC = g++
+GCFLAGS =-O3 -Wall -std=c++11 #-fopenmp -fPIC -shared
 
-ALL: test_read_msh test_fespace
+SHFEM_SRCDIR = ..
+
+BOOST_UNIT_TEST_LIB = -lboost_unit_test_framework 
+
+TARGET = test_read_msh test_fespace
+
+all: $(TARGET)
 
 #REMARK: 
 # It is important to locate "-lboost_unit_test_framework" at end of line,
 # see http://askubuntu.com/questions/104316/problem-with-executing-boost-library
 
 test_read_msh: test_read_msh.cpp
-	g++ -I$(HPFEM_SRCDIR) $< -o $@ -lboost_unit_test_framework 
+	$(GCC) $(GCFLAGS) -I$(SHFEM_SRCDIR) $< -o $@ $(BOOST_UNIT_TEST_LIB)
 
 test_fespace: test_fespace.cpp
-	g++ -I$(HPFEM_SRCDIR) $< -o $@ -lboost_unit_test_framework 
+	$(GCC) $(GCFLAGS) -I$(SHFEM_SRCDIR) $< -o $@ $(BOOST_UNIT_TEST_LIB) 
+
+clean: 
+	rm -rf *.a *.o $(TARGET)

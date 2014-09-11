@@ -1,6 +1,15 @@
-HPFEM_SRCDIR=..
+# gcc compile
+GCC = g++
+GCFLAGS =-O3 -Wall -std=c++11 #-fopenmp -fPIC -shared
 
-ALL: read_msh 
+SHFEM_SRCDIR=..
+
+TARGET = read_msh
+
+all: $(TARGET)
 
 read_msh: read_msh.cpp
-	g++ -I$(HPFEM_SRCDIR) $< -o $@ 
+	$(GCC) $(GCFLAGS) -I$(SHFEM_SRCDIR) $< -o $@
+
+clean: 
+	rm -rf *.a *.o $(TARGET)

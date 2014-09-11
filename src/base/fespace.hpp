@@ -21,15 +21,28 @@
 #define FESPACE_HPP_
 
 #include "geometry_2d.hpp"
+#include "quadrature.hpp"
 
 namespace shfem {
 
-  /// Base class for Finite Element spaces on a given 2d mesh
+  /// Stores data for a concrete finite element
+  class FiniteElementData;
+
+  /// Base class for Finite Element spaces in a given 2d mesh
   /// TODO: make mesh type a template argument
   class BaseFESpace {
   protected:
-    BaseFESpace(Mesh const& m): mesh(&m) {}
-    Mesh const* mesh;
+    const Mesh* mesh;
+    const BaseQuadRule* quadrature_rule;
+  public:
+    void set_mesh( const Mesh& m) { mesh = &m; }
+    const Mesh& get_mesh() const { return *mesh; }
+    void set_quadrature_rule(const BaseQuadRule& qr) { quadrature_rule = &qr; }
+    const BaseQuadRule& get_quadrature_rule() const { return *quadrature_rule; }
+
+    // const FiniteElementData& compute_data_for_element(index_t element_index) {
+    // }
+    
   };
 
   /// Continous Galerkin ($P_k$--Lagrange) Finite Element spaces
@@ -37,8 +50,9 @@ namespace shfem {
     public BaseFESpace
   {
   public:
-    CG_FESpace(Mesh const& m): BaseFESpace(m) {}
+    CG_FESpace(Mesh const& m) { set_mesh(m); }
   };
   
 }
+
 #endif // FESPACE_HPP_
