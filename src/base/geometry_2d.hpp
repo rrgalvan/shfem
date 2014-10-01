@@ -92,8 +92,10 @@ namespace shfem {
       return (x2-x1)*(y3-y1) - (y2-y1)*(x3-x1);
     }
     
+    // Returns the area of a given triangle
     real_t area(index_t triangle_id) const {
-      return 2*std::abs(det_J_affine_transform(triangle_id));
+      static const real_t area_of_reference_element = 0.5;
+      return area_of_reference_element * std::abs(det_J_affine_transform(triangle_id));
     }
   };
   

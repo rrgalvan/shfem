@@ -43,6 +43,17 @@ int main()
   
   // Calculate area of each triangle 
   for(unsigned i=0; i<m.get_nt(); ++i) {
+    std::cout << "Determinant of affine transormation #" << i << ": " 
+	      << m.det_J_affine_transform(i) << std::endl;
+  }
+
+  for(unsigned i=0; i<m.get_nt(); ++i) {
+    std::cout << "Determinant of inverse affine transormation #" << i << ": " 
+	      << m.det_J_inv_affine_transform(i) << std::endl;
+  }
+
+  // Calculate area of each triangle 
+  for(unsigned i=0; i<m.get_nt(); ++i) {
     std::cout << "Area of triangle " << i << ": " << m.area(i) << std::endl;
   }
 }
