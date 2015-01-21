@@ -1,4 +1,4 @@
-// fespace.hpp --- 
+// fespace.hpp ---
 
 // Copyright (C) 2014 Rafa Rodríguez Galván <rafaelDOTrodriguezATucaDOTes>
 
@@ -32,27 +32,27 @@ namespace shfem {
   /// TODO: make mesh type a template argument
   class BaseFESpace {
   protected:
-    const Mesh* mesh;
+    const BaseMesh* mesh;
     const BaseQuadRule* quadrature_rule;
   public:
-    void set_mesh( const Mesh& m) { mesh = &m; }
-    const Mesh& get_mesh() const { return *mesh; }
+    void set_mesh( const BaseMesh& m) { mesh = &m; }
+    const BaseMesh& get_mesh() const { return *mesh; }
     void set_quadrature_rule(const BaseQuadRule& qr) { quadrature_rule = &qr; }
     const BaseQuadRule& get_quadrature_rule() const { return *quadrature_rule; }
 
     // const FiniteElementData& compute_data_for_element(index_t element_index) {
     // }
-    
+
   };
 
   /// Continous Galerkin ($P_k$--Lagrange) Finite Element spaces
-  class CG_FESpace: 
+  class CG_FESpace:
     public BaseFESpace
   {
   public:
-    CG_FESpace(Mesh const& m) { set_mesh(m); }
+    CG_FESpace(BaseMesh const& m) { set_mesh(m); }
   };
-  
+
 }
 
 #endif // FESPACE_HPP_

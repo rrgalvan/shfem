@@ -8,17 +8,17 @@
 
 BOOST_AUTO_TEST_CASE(MeshReadInOrder)
 {
-  shfem::Mesh m;
+  shfem::dim2::Mesh m;
   m.read_file_msh("squared-mesh-2x2.msh");
 
-  unsigned nb_triangles = m.get_nt(), expected_nb_triangles = 8;
+  unsigned nb_triangles = m.get_nelt(), expected_nb_triangles = 8;
   BOOST_CHECK_EQUAL(nb_triangles, expected_nb_triangles);
 
-  unsigned nb_vertices = m.get_nv(), expected_nb_vertices = 9;
+  unsigned nb_vertices = m.get_nver(), expected_nb_vertices = 9;
   BOOST_CHECK_EQUAL(nb_vertices, expected_nb_vertices);
 
-  for(unsigned i=0; i<m.get_nt(); ++i) {
-    shfem::real_t current_area = m.area(i), expected_area = 0.5;
+  for(unsigned i=0; i<m.get_nelt(); ++i) {
+    shfem::real_t current_area = m.area(i), expected_area = 0.125;
     // Check that the two floating point values differ no more 
     // than 0.0000000001 of their value.
     BOOST_CHECK_CLOSE(current_area, expected_area, 1.e-10);

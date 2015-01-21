@@ -1,4 +1,4 @@
-// read_msh.cpp --- 
+// read_msh.cpp ---
 
 // Copyright (C) 2014 Rafa Rodríguez Galván <rafaelDOTrodriguezATucaDOTes>
 
@@ -23,8 +23,8 @@
 int main()
 {
   // Build an empty mesh object
-  shfem::Mesh m;
-  
+  shfem::dim2::Mesh m;
+
   // Try to read mesh contents from a .msh file (for information about the
   // structure of these files, see FreeFem++ documentation).
   try {
@@ -35,25 +35,25 @@ int main()
   }
 
   // Show information about triangles and vertices
-  std::cout << "Read mesh with " << m.get_nt() << " triangles and "
-	    << m.get_nv() << " vertices" << std::endl;
+  std::cout << "Read mesh with " << m.get_nelt() << " triangles and "
+	    << m.get_nver() << " vertices" << std::endl;
 
   // Print elements and coordinates of each vertex
   m.print();
-  
-  // Calculate area of each triangle 
-  for(unsigned i=0; i<m.get_nt(); ++i) {
-    std::cout << "Determinant of affine transormation #" << i << ": " 
+
+  // Calculate determinants of affinte transformations
+  for(unsigned i=0; i<m.get_nelt(); ++i) {
+    std::cout << "Determinant of affine transormation #" << i << ": "
 	      << m.det_J_affine_transform(i) << std::endl;
   }
 
-  for(unsigned i=0; i<m.get_nt(); ++i) {
-    std::cout << "Determinant of inverse affine transormation #" << i << ": " 
-	      << m.det_J_inv_affine_transform(i) << std::endl;
-  }
+  // for(unsigned i=0; i<m.get_nt(); ++i) {
+  //   std::cout << "Determinant of inverse affine transormation #" << i << ": "
+  // 	      << m.det_J_inv_affine_transform(i) << std::endl;
+  // }
 
-  // Calculate area of each triangle 
-  for(unsigned i=0; i<m.get_nt(); ++i) {
+  // Calculate area of each triangle
+  for(unsigned i=0; i<m.get_nelt(); ++i) {
     std::cout << "Area of triangle " << i << ": " << m.area(i) << std::endl;
   }
 }
