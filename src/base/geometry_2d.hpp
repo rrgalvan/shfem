@@ -75,11 +75,12 @@ namespace shfem {
       std::vector<Element> elements;
 
     public:
-      /// Return number of vertices
+      /// @return number of vertices
       index_t get_nver() const { return vertices.size(); }
-      /// Return number of elements
+      /// @return number of elements
       index_t get_nelt() const { return elements.size(); }
       /// Read mesh from a medit .msh file (e.g. wrote by FreeFem++)
+      /// @param filename Name of a file containing the mesh
       void read_file_msh(const char* filename);
       /// Print mesh contents
       void print() const;
@@ -128,10 +129,11 @@ namespace shfem {
      */
     void Mesh::print() const {
       for(index_t i=0; i<get_nelt(); ++i) {
+	const Triangle& T = elements[i];
 	std::cout << "Element " << i << ":" << std::endl;
-	vertices[ elements[i].idv1 ].print();
-	vertices[ elements[i].idv2 ].print();
-	vertices[ elements[i].idv3 ].print();
+	vertices[ T.idv1 ].print();
+	vertices[ T.idv2 ].print();
+	vertices[ T.idv3 ].print();
       }
     }
 

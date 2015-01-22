@@ -25,24 +25,95 @@
 
 namespace shfem {
 
-  /// Stores data for a concrete finite element
-  class FiniteElementData;
+  /// Stores information for a concrete finite element
+  class FiniteElement {
+  private:
+    const BaseQuadRule* _quadrature_rule;
+  public:
+    FiniteElement() :
+      _quadrature_rule(NULL)
+    {}
+    /// Set quadrature rule
+    /**
+     * @brief Defines quadrature rule for current element
+     * @param qr Quadrature rule
+     */
+    void set_quadrature_rule(const BaseQuadRule& qr) { _quadrature_rule = &qr; }
+
+    /**
+     * @brief Get quadrature rule attached to current element
+     * @return Reference to quadrature rule (BaseQuadrule)
+     */
+    const BaseQuadRule& get_quadrature_rule() const { return *_quadrature_rule; }
+
+    /**
+     * @brief Get the element shape functions (evaluated at quadrature points)
+     * @return Vector of FEfunction (values in each quadrature rule)
+     */
+    const std::vector<QuadFunction>& get_shape_functions() const;
+
+    /**
+     * @brief Get the x-dervative of element shape function
+     * @return Vector of FEfunction (x-derivatives evaluated in each quadrature rule)
+     */
+    const std::vector<QuadFunction>& get_dx_shape_functions() const;
+
+    /**
+     * @brief Get the y-dervative of element shape function
+     * @return Vector of FEfunction (y-derivatives evaluated in each quadrature rule)
+     */
+    const std::vector<QuadFunction>& get_dy_shape_functions() const;
+  };
 
   /// Base class for Finite Element spaces in a given 2d mesh
-  /// TODO: make mesh type a template argument
+  //  Current implementation stores a vector of elements. It increases the need
+  // for storage (and decreases computing requirements?)
+  // - TODO: develop other implementations (not storing elements).
+  // - TODO: make mesh type a template argument
   class BaseFESpace {
-  protected:
-    const BaseMesh* mesh;
-    const BaseQuadRule* quadrature_rule;
   public:
-    void set_mesh( const BaseMesh& m) { mesh = &m; }
-    const BaseMesh& get_mesh() const { return *mesh; }
-    void set_quadrature_rule(const BaseQuadRule& qr) { quadrature_rule = &qr; }
-    const BaseQuadRule& get_quadrature_rule() const { return *quadrature_rule; }
+    typedef dim2::Mesh MeshType;
+  protected:
+    const MeshType* mesh;
+    const BaseQuadRule* default_quadrature_rule;
+    std::vector<FiniteElement> finite_elements; /// List of finite elements
+  public:
 
-    // const FiniteElementData& compute_data_for_element(index_t element_index) {
-    // }
+    /**
+     * Attach (a pointer to) a given mesh to current FE space and
+     * adjusts consequently he size of finite_elements vector
+     *
+     * @param m Mesh to be attached
+     */
+    void set_mesh( const MeshType& m) {
+      mesh = &m;
+      finite_elements.resize(mesh->get_nelt());
+    }
 
+    /**
+     * @brief Get Mesh
+     * @return Mesh currently attached to this FESpace
+     */
+    const MeshType& get_mesh() const { return *mesh; }
+
+    /// @brief Set quadrature rule that is used (by default) by all elements
+    /// @param qr Quadrature rule
+    void set_default_quadrature_rule(const BaseQuadRule& qr) {
+      default_quadrature_rule = &qr; }
+
+    /// @brief Get quadrature rule used (by default) by all elements
+    /// @return Default quadrature rule
+    const BaseQuadRule& get_default_quadrature_rule() const {
+      return *default_quadrature_rule; }
+
+    /**
+     * @brief  Get a concrete finite element
+     * @param element_index Index in current FESpace of the desired Element
+     * @return Reference to the element
+     */
+    const FiniteElement& get_element(index_t element_index) const {
+      return finite_elements[element_index];
+    }
   };
 
   /// Continous Galerkin ($P_k$--Lagrange) Finite Element spaces
@@ -50,7 +121,8 @@ namespace shfem {
     public BaseFESpace
   {
   public:
-    CG_FESpace(BaseMesh const& m) { set_mesh(m); }
+    typedef dim2::Mesh MeshType;
+    CG_FESpace(MeshType const& m) { set_mesh(m); }
   };
 
 }

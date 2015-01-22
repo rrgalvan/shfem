@@ -2,7 +2,7 @@
 
 // Boost test suite library.
 // Enable dynamic linking with -lboost_unit_test_framework
-#define BOOST_TEST_DYN_LINK 
+#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE BasicTests
 #include <boost/test/unit_test.hpp>
 
@@ -19,8 +19,8 @@ BOOST_AUTO_TEST_CASE(MeshReadInOrder)
 
   for(unsigned i=0; i<m.get_nelt(); ++i) {
     shfem::real_t current_area = m.area(i), expected_area = 0.125;
-    // Check that the two floating point values differ no more 
-    // than 0.0000000001 of their value.
-    BOOST_CHECK_CLOSE(current_area, expected_area, 1.e-10);
+    // Check that the two floating point values differ no more
+    // than $10^{-20}$ of their value.
+    BOOST_CHECK_CLOSE(current_area, expected_area, 1.e-20);
   }
 }
