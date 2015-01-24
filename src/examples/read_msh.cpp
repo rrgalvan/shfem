@@ -23,7 +23,7 @@
 int main()
 {
   // Build an empty mesh object
-  shfem::dim2::Mesh m;
+  shfem::dim2::TriangleMesh m;
 
   // Try to read mesh contents from a .msh file (for information about the
   // structure of these files, see FreeFem++ documentation).

@@ -23,6 +23,13 @@ namespace shfem {
       static std::vector<real_t> weights;
 
       /**
+       * @brief Number of nodes and weights in current quadrature rule
+       *
+       * @return Number of nodes and weights
+       */
+      size_t size() const { return weights.size();}
+
+      /**
        * @brief Integrate a function (vector) on the reference elemenet
        * @param values vector representing values of the function on each
        *               quadrature point

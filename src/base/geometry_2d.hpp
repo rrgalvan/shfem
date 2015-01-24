@@ -51,9 +51,30 @@ namespace shfem {
       std::cout << "(" << this->x << "," << this->y << ")" << std::endl;
     }
 
-    //,---------
-    //| Triangle
-    //`---------
+
+    // /**
+    //  * @brief Topological information for a 2d triangle.
+    //  *
+    //  * Class wich stores three indices corresponding to the vertices
+    //  * of a 2d tirnagle
+    //  */
+    // struct Triangle {
+    //   Triangle() {}
+    //   Triangle(index_t i1, index_t i2, index_t i3): idv1(i1), idv2(i2), idv3(i3) {}
+    //   // Global index of vertex 1
+    //   index_t idv1;
+    //   // Global index of vertex 2
+    //   index_t idv2;
+    //   // Global index of vertex 3
+    //   index_t idv3;
+    // };
+
+    /**
+     * @brief Topological information for a 2d triangle.
+     *
+     * Class wich stores three indices corresponding to the global
+     * information about vertices of a 2d trangle
+     */
     struct Triangle {
       Triangle() {}
       Triangle(index_t i1, index_t i2, index_t i3): idv1(i1), idv2(i2), idv3(i3) {}
@@ -65,40 +86,75 @@ namespace shfem {
       index_t idv3;
     };
 
+    /**
+     * @brief Geometric information for a topological object
+     *
+     * Class wich stores referencies to three points, storing the
+     * coordinates of vertices of topological object (for instance, a
+     * triangle)
+     */
+    struct TriangleGeometry {
+      const Point& vertex1;
+      const Point& vertex2;
+      const Point& vertex3;
 
-    //,-----
-    //| Mesh
-    //`-----
-    class Mesh: public BaseMesh {
-      typedef Triangle Element;
-      std::vector<Point> vertices;
-      std::vector<Element> elements;
+      /**
+       * @brief Buld geometry, storing references to three Points
+       * @param p1 Coordinates of first point
+       * @param p2 Coordinates of second point
+       * @param p3 Coordinates of third point
+       */
+      TriangleGeometry(const Point& p1, const Point& p2, const Point& p3):
+	vertex1(p1), vertex2(p2), vertex3(p3) {}
+    };
 
+    /**
+     * @brief Mesh composed by 2d triangles
+     */
+    class TriangleMesh: public BaseMesh {
     public:
+      typedef Triangle CELL;
+    private:
+      std::vector<Point> vertices;
+      std::vector<CELL> cells;
+    public:
+      /// @brief Read number of vertices in current mesh
       /// @return number of vertices
       index_t get_nver() const { return vertices.size(); }
-      /// @return number of elements
-      index_t get_nelt() const { return elements.size(); }
-      /// Read mesh from a medit .msh file (e.g. wrote by FreeFem++)
+
+      /// @brief Read number of cells in current mesh
+      /// @return number of cells
+      index_t get_ncel() const { return cells.size(); }
+
+      /// @brief Get a concrete cell contained in current mesh
+      /// @return (Reference to) a cell
+      const CELL& get_cell(index_t i) const { return cells[i];}
+
+      /// @brief Get a concrete vertex contained in current mesh
+      /// @return (Reference to) a Point
+      const Point& get_vertex(index_t i) const { return vertices[i];}
+
+      /// @brief Read mesh from a medit .msh file (e.g. wrote by FreeFem++)
       /// @param filename Name of a file containing the mesh
       void read_file_msh(const char* filename);
-      /// Print mesh contents
+
+      /// @brief Print mesh contents
       void print() const;
 
       // Returns $F_T(\hat P)$, where $T$ is this triangle, $\hat P \in T$ and
-      // $F_T$ is the affine transformation from the reference element to $T$.
+      // $F_T$ is the affine transformation from the reference cell to $T$.
       // Point affine_transform(const Triangle& T, const&  hatP) const; // UNIMPLEMENTED
 
       /**
+       * @brief Determinant of Jacobian of transformation $F_T$
        * Calculate the determinant of the Jacobian of the
-       * affine transformation $F_T$ for a given element T
+       * affine transformation $F_T$ for a given cell T
        *
-       * @param element_id Identifier of element T
-       *
+       * @param cell_id Identifier of cell T
        * @return Determinant of Jacobian
        */
-      real_t det_J_affine_transform(index_t element_id) const {
-	const Triangle& T = elements[element_id];
+      real_t det_J_affine_transform(index_t cell_id) const {
+	const Triangle& T = cells[cell_id];
 	real_t x1 = vertices[T.idv1].x;
 	real_t y1 = vertices[T.idv1].y;
 	real_t x2 = vertices[T.idv2].x;
@@ -109,28 +165,28 @@ namespace shfem {
       }
 
       /**
-       * Calculate the area of a (triangle) element
+       * Calculate the area of a (triangle) cell
        *
-       * @param element_id Identifier of the element
+       * @param cell_id Identifier of the cell
        *
-       * @return Area of element
+       * @return Area of cell
        */
-      real_t area(index_t element_id) const {
-	static const real_t area_of_reference_element = 0.5;
-	return area_of_reference_element * std::abs(det_J_affine_transform(element_id));
+      real_t area(index_t cell_id) const {
+	static const real_t area_of_reference_cell = 0.5;
+	return area_of_reference_cell * std::abs(det_J_affine_transform(cell_id));
       }
     };
 
     /**
      * Print information about current mesh
      *
-     * Displayed information: identifier for each element
-     * and vertices of each element
+     * Displayed information: identifier for each cell
+     * and vertices of each cell
      */
-    void Mesh::print() const {
-      for(index_t i=0; i<get_nelt(); ++i) {
-	const Triangle& T = elements[i];
-	std::cout << "Element " << i << ":" << std::endl;
+    void TriangleMesh::print() const {
+      for(index_t i=0; i<get_ncel(); ++i) {
+	const Triangle& T = cells[i];
+	std::cout << "Cell " << i << ":" << std::endl;
 	vertices[ T.idv1 ].print();
 	vertices[ T.idv2 ].print();
 	vertices[ T.idv3 ].print();
@@ -145,13 +201,13 @@ namespace shfem {
      *
      * @param filename
      */
-    void Mesh::read_file_msh(const char* filename) {
+    void TriangleMesh::read_file_msh(const char* filename) {
       std::fstream meshfile(filename);
 
-      int nver, nelt, nedg;
-      meshfile >> nver >> nelt >> nedg;
+      int nver, ncel, nedg;
+      meshfile >> nver >> ncel >> nedg;
       this->vertices = std::vector<Point>(nver);
-      this->elements = std::vector<Element>(nelt);
+      this->cells = std::vector<CELL>(ncel);
 
       for(int i=0; i<nver; i++) {
 	real_t x, y, label;
@@ -160,10 +216,10 @@ namespace shfem {
 	vertices[i]=p;
       }
 
-      for(int i=0; i<nelt; i++) {
+      for(int i=0; i<ncel; i++) {
 	unsigned int id1, id2, id3, zero;
 	meshfile >> id1 >> id2 >> id3 >> zero;
-	elements[i] = Element(id1-1, id2-1, id3-1); // 1 index -> 0 index
+	cells[i] = CELL(id1-1, id2-1, id3-1); // 1 index -> 0 index
       }
     }
 
