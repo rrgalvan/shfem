@@ -1,8 +1,8 @@
-#ifndef HPFEM_HPP_
-#define HPFEM_HPP_
+#ifndef SHFEM_HPP_
+#define SHFEM_HPP_
 
 #include "base/geometry_2d.hpp"
-#include "base/fespace.hpp"
-// #include "base/quadrature.hpp"
+#include "base/quadrature.hpp"
+#include "base/finite_element.hpp"
 
-#endif // HPFEM_HPP_
+#endif // SHFEM_HPP_

@@ -16,11 +16,4 @@ BOOST_AUTO_TEST_CASE(MeshReadInOrder)
 
   unsigned nb_vertices = m.get_nver(), expected_nb_vertices = 9;
   BOOST_CHECK_EQUAL(nb_vertices, expected_nb_vertices);
-
-  for(unsigned i=0; i<m.get_ncel(); ++i) {
-    shfem::real_t current_area = m.area(i), expected_area = 0.125;
-    // Check that the two floating point values differ no more
-    // than $10^{-20}$ of their value.
-    BOOST_CHECK_CLOSE(current_area, expected_area, 1.e-20);
-  }
 }

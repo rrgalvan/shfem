@@ -1,4 +1,4 @@
-// fespace.hpp ---
+// finite_element.hpp ---
 
 // Copyright (C) 2014 Rafa Rodríguez Galván <rafaelDOTrodriguezATucaDOTes>
 
@@ -17,8 +17,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef FESPACE_HPP_
-#define FESPACE_HPP_
+#ifndef FINITE_ELEMENT_HPP_
+#define FINITE_ELEMENT_HPP_
 
 #include "geometry_2d.hpp"
 #include "quadrature.hpp"
@@ -38,13 +38,14 @@ namespace shfem {
   public:
     enum {NDOFS=3};
     typedef dim2::TriangleMesh MESH;
+    typedef dim2::Point POINT;
     typedef MESH::CELL CELL;
-    typedef dim2::TriangleGeometry GEOMETRY;
+    typedef std::vector<POINT> GEOMETRY;
     typedef BaseQuadRule QUADRULE;
 
   protected:
     const CELL* _cell;		/**< Topological information (global indices of vertex) */
-    const GEOMETRY* _geometry;	/**< Geometrical information (coord. of vertex) */
+    GEOMETRY _geometry;	/**< Geometrical information (coord. of vertex) */
     const QUADRULE* _quadrature_rule; /**< Quadrature rule  */
 
   public:
@@ -52,7 +53,7 @@ namespace shfem {
      * @brief Construct a void Finite element
      */
     FiniteElement() :
-      _cell(NULL), _geometry(NULL), _quadrature_rule(NULL) {}
+      _cell(NULL), _geometry(), _quadrature_rule(NULL) {}
 
     /**
      * @brief Delete data computed for current element ()
@@ -74,15 +75,15 @@ namespace shfem {
      * @param mesh Mesh for obtaining topological and geometric informtion
      * @param idx_cell Global index in the mesh of current cell (Element)
      */
-    void reinit(const MESH& mesh, index_t idx_cell){
+    void reinit(const MESH& mesh, index_t idx_cell) {
       _cell = &mesh.get_cell(idx_cell);
-      index_t idv1 = _cell->idv1; // Global index for vertex 1
-      index_t idv2 = _cell->idv2; // Global index for vertex 2
-      index_t idv3 = _cell->idv3; // Global index for vertex 3
-      const dim2::Point& v1 = mesh.get_vertex(idv1);
-      const dim2::Point& v2 = mesh.get_vertex(idv2);
-      const dim2::Point& v3 = mesh.get_vertex(idv3);
-      _geometry = new GEOMETRY(v1, v2, v3);
+      index_t idv0 = _cell->idv0; // Global index for vertex 1
+      index_t idv1 = _cell->idv1; // Global index for vertex 2
+      index_t idv2 = _cell->idv2; // Global index for vertex 3
+      _geometry.resize(3);
+      _geometry[0] = mesh.get_vertex(idv0);
+      _geometry[1] = mesh.get_vertex(idv1);
+      _geometry[2] = mesh.get_vertex(idv2);
     }
 
     /**
@@ -90,7 +91,7 @@ namespace shfem {
      */
     void clear() {
       _cell = NULL;
-      if (_geometry != NULL) { delete _geometry; _geometry = NULL; }
+      _geometry.clear();
       _quadrature_rule = NULL;
     }
 
@@ -101,7 +102,7 @@ namespace shfem {
     void set_cell(const CELL& cell) { _cell = &cell; }
 
     /**
-     * @brief Returns the underlying geometric cell for current element
+     * @brief Returns the underlying topological cell for current element
      * @return Underlying cell
      */
     const CELL& get_cell() const { return *_cell; }
@@ -117,6 +118,88 @@ namespace shfem {
      * @return Reference to quadrature rule (BaseQuadrule)
      */
     const QUADRULE& get_quadrature_rule() const { return *_quadrature_rule; }
+
+    const POINT& get_vertex0() const { return _geometry[0]; }
+    const POINT& get_vertex1() const { return _geometry[1]; }
+    const POINT& get_vertex2() const { return _geometry[2]; }
+    const POINT& get_vertex(index_t i) const { return _geometry[i]; }
+
+
+    // Returns $F_T(\hat P)$, where $T$ is this triangle, $\hat P \in T$ and
+    // $F_T$ is the affine transformation from the reference cell to $T$.
+    // Point affine_transform(const Triangle& T, const&  hatP) const; // UNIMPLEMENTED
+
+    /**
+     * @brief Determinant of Jacobian of map $F_K$
+     *
+     * Calculate the determinant of the Jacobian of the
+     * affine transformation $F_K$ for a given cell K
+     *
+     * @return Determinant of Jacobian
+     */
+    real_t det_jacobian_affine_map() const {
+      real_t x0 = get_vertex0().x, y0 = get_vertex0().y;
+      real_t x1 = get_vertex1().x, y1 = get_vertex1().y;
+      real_t x2 = get_vertex2().x, y2 = get_vertex2().y;
+      return (x1-x0)*(y2-y0) - (y1-y0)*(x2-x0);
+    }
+
+    /**
+     * Calculate the area of a (triangle) cell
+     *
+     * @return Area of cell
+     */
+    real_t area() const {
+      static const real_t area_of_reference_cell = 0.5;
+      return area_of_reference_cell * std::abs(det_jacobian_affine_map());
+    }
+
+    /**
+     * @brief Apply the affine map to a point located in the reference cell
+     *
+     * If $K$ is the cell attached to current element, the affine map
+     * is defined as the application $T_K: \overline K \to K$ (where
+     * $\overline K$ is a reference polyhedron) such that
+     * $$T_K(\overline x) = B_K \overline x + b_K, $$ $B_K$ being a
+     * nonsingular matrix.
+     *
+     * @param point Point located in the reference cell
+     * @return Point resulting from application of the affine map
+     */
+    POINT apply_affine_map(const POINT& point) {
+      real_t hatx = point.x, haty = point.y;
+      real_t x0 = get_vertex0().x, y0 = get_vertex0().y;
+      real_t x1 = get_vertex1().x, y1 = get_vertex1().y;
+      real_t x2 = get_vertex2().x, y2 = get_vertex2().y;
+      float aux = 1-hatx-haty;;
+      return POINT(x0*aux + x1*hatx + x2*haty,
+		   y0*aux + y1*hatx + y2*haty);
+    }
+
+    /**
+     * @brief Apply inverse affine map to a point located in the physical cell
+     *
+     * If $K$ is the cell attached to current element, the affine map
+     * is defined as the application $T^{-1}_K: K \to \overline K$
+     * (where $\overline K$ is a reference polyhedron) such that
+     * $$T_K(\overline x) = B_K \overline x + b_K, $$ $B_K$ being a
+     * nonsingular matrix.
+     *
+     * @param point Point located in the physical cell
+     * @return Point resulting from application of the inverse affine map
+     */
+    POINT apply_inv_affine_map(const POINT& point)
+    {
+      real_t x = point.x, y = point.y;
+      real_t x0 = get_vertex0().x, y0 = get_vertex0().y;
+      real_t x1 = get_vertex1().x, y1 = get_vertex1().y;
+      real_t x2 = get_vertex2().x, y2 = get_vertex2().y;
+      real_t inv_det_B = 1.0/((x1-x0)*(y2-y0) - (y1-y0)*(x2-x0));
+      real_t dx = x-x0, dy=y-y0;
+      real_t hatx = (dx*(y2-y0) + (x0-x2)*dy)*inv_det_B;
+      real_t haty = (dx*(y0-y1) + (x1-x0)*dy)*inv_det_B;
+      return POINT(hatx, haty);
+    }
 
     /**
      * @brief Get the element shape functions (evaluated at quadrature points)
@@ -137,94 +220,6 @@ namespace shfem {
     const std::vector<QuadFunction>& get_dy_shape_functions() const;
   };
 
-
-  // /**
-  //  * @brief Base class for Finite Element spaces in a given 2d mesh
-  //  *
-  //  * Current implementation stores a vector of elements. It increases
-  //  * the need for storage (and decreases computing requirements?)
-  //  *
-  //  * - TODO: develop other implementations (not storing elements).
-  //  * - TODO: make mesh type a template argument
-  //  */
-  // class BaseFESpace {
-  //   // public:
-  //   //   typedef dim2::TriangleMesh MeshType;
-  //   //   typedef FiniteElement ELEMENT;
-  // protected:
-  //   const QUADRULE* default_quadrature_rule;
-  //   std::vector<ELEMENT> finite_elements; /// List of finite elements
-  // public:
-  //   BaseFESpace(): mesh(NULL), default_quadrature_rule(NULL) {}
-
-  //   /**
-  //    * Attach (a pointer to) a given mesh to current FE space.
-
-  //    * Also adjust consequently he size of finite_elements vector (in
-  //    * default implementation, it is defined as the number of cells in
-  //    * the atached mesh)
-  //    *
-  //    * @param m Mesh to be attached
-  //    */
-  //   void set_mesh( const MESH& m) {
-  //     mesh = &m;
-  //     int n = mesh->get_ncel();
-  //     finite_elements.resize(n);
-  //     for(int i=0; i<n; i++) {
-  // 	ELEMENT* fe = &finite_elements[i];
-  // 	fe->set_cell(mesh->get_cell(i));
-  // 	fe->set_quadrature_rule(*default_quadrature_rule);
-  //     }
-  //   }
-
-  //   /**
-  //    * @brief Get Mesh
-  //    * @return Mesh currently attached to this FESpace
-  //    */
-  //   const MeshType& get_mesh() const { return *mesh; }
-
-  //   /// @brief Set quadrature rule that is used (by default) by all elements
-  //   /// @param qr Quadrature rule
-  //   void set_default_quadrature_rule(const QUADRULE& qr) {
-  //     default_quadrature_rule = &qr; }
-
-  //   /// @brief Get quadrature rule used (by default) by all elements
-  //   /// @return Default quadrature rule
-  //   const QUADRULE& get_default_quadrature_rule() const {
-  //     return *default_quadrature_rule; }
-
-  //   /**
-  //    * @brief Get the number of elements in current FE space.
-  //    *
-  //    * For the default implementation, the number of elements is
-  //    * defined as the size of the finite_elements list
-  //    *
-  //    * @return Number of elements in current FE space
-  //    */
-  //   size_t get_nelt() const {
-  //     return this->finite_elements.size();
-  //   }
-
-  //   /**
-  //    * @brief Get a concrete finite element
-  //    * @param element_index Index in current FESpace of the desired Element
-  //    * @return Reference to the element
-  //    */
-  //   const ELEMENT& get_element(index_t element_index) const {
-  //     return finite_elements[element_index];
-  //   }
-  // };
-
-  // /// Continous Galerkin ($P_k$--Lagrange) Finite Element spaces
-  // class CG_FESpace:
-  //   public BaseFESpace
-  // {
-  // public:
-  //   typedef dim2::TriangleMesh MeshType;
-  //   CG_FESpace() {}
-  //   // CG_FESpace(MeshType const& m) { set_mesh(m); }
-  // };
-
 }
 
-#endif // FESPACE_HPP_
+#endif // FINITE_ELEMENT_HPP_

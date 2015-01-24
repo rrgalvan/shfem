@@ -44,7 +44,7 @@ int main()
   // Calculate determinants of affinte transformations
   for(unsigned i=0; i<m.get_nelt(); ++i) {
     std::cout << "Determinant of affine transormation #" << i << ": "
-	      << m.det_J_affine_transform(i) << std::endl;
+	      << m.det_jacobian_affine_map(i) << std::endl;
   }
 
   // for(unsigned i=0; i<m.get_nt(); ++i) {
