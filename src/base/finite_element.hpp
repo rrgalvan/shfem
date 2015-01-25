@@ -25,6 +25,21 @@
 
 namespace shfem {
 
+  using FUNCTION_R2 = real_t(*)(real_t,real_t); // C++11 syntax
+
+  struct ReferenceElement
+  {
+    typedef dim2::Point POINT;
+    std::vector<POINT> vertex;
+    static real_t phi_0(real_t x, real_t y) {return 1-x-y;}
+    static real_t phi_1(real_t x, real_t y) {return x;}
+    static real_t phi_2(real_t x, real_t y) {return y;}
+    std::vector<FUNCTION_R2> phi;
+    ReferenceElement() :
+      vertex({POINT(0,0), POINT(1,0), POINT(0,1)}),
+      phi({phi_0, phi_1, phi_2}) {}
+  };
+
   /// @brief Stores information for a concrete finite element
   ///
   /// Information stored:
@@ -40,13 +55,13 @@ namespace shfem {
     typedef dim2::TriangleMesh MESH;
     typedef dim2::Point POINT;
     typedef MESH::CELL CELL;
-    typedef std::vector<POINT> GEOMETRY;
     typedef BaseQuadRule QUADRULE;
 
   protected:
     const CELL* _cell;		/**< Topological information (global indices of vertex) */
-    GEOMETRY _geometry;	/**< Geometrical information (coord. of vertex) */
+    std::vector<POINT> _geometry; /**< Geometrical information (coord. of vertex) */
     const QUADRULE* _quadrature_rule; /**< Quadrature rule  */
+    static ReferenceElement reference_element;
 
   public:
     /**
@@ -167,13 +182,13 @@ namespace shfem {
      * @return Point resulting from application of the affine map
      */
     POINT apply_affine_map(const POINT& point) {
-      real_t hatx = point.x, haty = point.y;
+      real_t referenceX = point.x, referenceY = point.y;
       real_t x0 = get_vertex0().x, y0 = get_vertex0().y;
       real_t x1 = get_vertex1().x, y1 = get_vertex1().y;
       real_t x2 = get_vertex2().x, y2 = get_vertex2().y;
-      float aux = 1-hatx-haty;;
-      return POINT(x0*aux + x1*hatx + x2*haty,
-		   y0*aux + y1*hatx + y2*haty);
+      float aux = 1-referenceX-referenceY;;
+      return POINT(x0*aux + x1*referenceX + x2*referenceY,
+		   y0*aux + y1*referenceX + y2*referenceY);
     }
 
     /**
@@ -195,10 +210,10 @@ namespace shfem {
       real_t x1 = get_vertex1().x, y1 = get_vertex1().y;
       real_t x2 = get_vertex2().x, y2 = get_vertex2().y;
       real_t inv_det_B = 1.0/((x1-x0)*(y2-y0) - (y1-y0)*(x2-x0));
-      real_t dx = x-x0, dy=y-y0;
-      real_t hatx = (dx*(y2-y0) + (x0-x2)*dy)*inv_det_B;
-      real_t haty = (dx*(y0-y1) + (x1-x0)*dy)*inv_det_B;
-      return POINT(hatx, haty);
+      real_t dx = x-x0, dy = y-y0;
+      real_t referenceX = (dx*(y2-y0) + (x0-x2)*dy)*inv_det_B;
+      real_t referenceY = (dx*(y0-y1) + (x1-x0)*dy)*inv_det_B;
+      return POINT(referenceX, referenceY);
     }
 
     /**
