@@ -131,3 +131,45 @@ BOOST_AUTO_TEST_CASE(QuadRuleTest)
   Real area_of_ref_triangle = 0.5; // Area of reference triangle
   BOOST_CHECK_CLOSE(integral, area_of_ref_triangle, 1.e-20);
 }
+
+BOOST_AUTO_TEST_CASE(IntegrateTest)
+{
+  // Define mesh on (0,1)x(0,1) with 2 subintervals on (0,1)
+  Mesh mesh;
+  mesh.read_file_msh("squared-mesh-2x2.msh");
+
+  // Define quadrature rule
+  VerticesQuadRule qr;
+
+  // Define finite element and attach to it the quadrature rule
+  shfem::FiniteElement fe;
+  fe.set_quadrature_rule(qr);
+
+  for (size_t icell=0; icell<mesh.get_ncel(); ++icell)
+    {
+      fe.reinit(mesh, icell); // Compute element-specific data
+      // For each degree of freedom, i:
+      for (size_t i = 0; i<fe.get_ndofs(); ++i)
+	{
+	  // Constant function, f=1, on quadrature nodes
+	  const shfem::FE_Function f = {1., 1., 1.};
+	  shfem::real_t integral_f_f = fe.integrate(f,f); // integral of f*f
+	  BOOST_CHECK_EQUAL(integral_f_f, fe.area());
+	  BOOST_CHECK_EQUAL(integral_f_f, 0.5*0.5/2.); // Area of triangle: b*h/2
+
+	  // Basis function on dof i
+	  const shfem::FE_Function& phi_i = fe.get_basis_function(i);
+	  // If K = Triang(P0,P1,P2), P0=(0,0), P1=(0,0.5), P2=(0.5,0.5),
+	  // then $\phi_0(x,y) = 1-2x$ and $\int_K 1-2*x dy dx =
+	  // = \int_0^0.5 \int_0^y 1-2x dy dx = 1/24$
+	  shfem::real_t integral_f_phi_i = fe.integrate(f, phi_i);
+	  BOOST_CHECK_EQUAL(integral_f_phi_i, 1./24);
+
+	  // $\phi_0^2(x,y) = (1-2x)^2$ and $\int_K (1-2*x) dy dx =
+	  // = \int_0^0.5 \int_0^y (1-2x) dy dx = 1/48$
+	  // But this quadrature rule is not exact for order 2 polynomials!!
+	  shfem::real_t integral_phi_i_phi_i = fe.integrate(phi_i, phi_i);
+	  BOOST_CHECK_NE(integral_phi_i_phi_i, 1./48);
+	}
+    }
+}

@@ -113,19 +113,19 @@ namespace shfem {
 	  // // Get physical basis function (for i-th degree of freedom)
 	  // const FE_Function& phi = _basis_functions[i];
 	  // Get reference-element basis function (for i-th dof)
-	  FUNCTION_R2 hat_phi = _reference_element.basis_functions[i];
+	  FUNCTION_R2 hat_phi_i = _reference_element.basis_functions[i];
 	  // Loop on quadrature nodes
-	  for(index_t inode=0; inode<nb_quad_nodes; ++inode)
+	  for(index_t j=0; j<nb_quad_nodes; ++j)
 	    {
 	      // Get quadrature node (at reference triangle)
-	      const POINT& hat_P = _quadrature_rule->nodes[inode];
+	      const POINT& hat_P_j = _quadrature_rule->nodes[j];
 	      // Apply reference basis function on that node
-	      _basis_functions[i][inode] = hat_phi(hat_P.x, hat_P.y);
+	      _basis_functions[i][j] = hat_phi_i(hat_P_j.x, hat_P_j.y);
 	    }
-	  // for(index_t inode=0; inode<nb_quad_nodes; ++inode)
+	  // for(index_t j=0; j<nb_quad_nodes; ++j)
 	  //   {
-	  //     std::cout << "_basis_functions[" << i << "][" << inode <<  "] = "
-	  // 		<< _basis_functions[i][inode] << std::endl;
+	  //     std::cout << "_basis_functions[" << i << "][" << j <<  "] = "
+	  // 		<< _basis_functions[i][j] << std::endl;
 
 	  //   }
 	  // std::cout << std::endl;
@@ -178,6 +178,41 @@ namespace shfem {
     const POINT& get_vertex2() const { return _geometry[2]; }
     const POINT& get_vertex(index_t i) const { return _geometry[i]; }
 
+    /**
+     * @brief Get the element shape functions (evaluated at quadrature points)
+     *
+     * Each finite element contains a vector of basis functions (one
+     * for each degree of freedom). Each basis function is defined as
+     * a vector which stores the values of bais function at the
+     * quadrature points.
+     *
+     * @return Vector of FE_function (values in each quadrature  rule)
+     */
+    const std::vector<FE_Function>& get_basis_functions() const {
+      return _basis_functions;
+    }
+
+    /**
+     * @brief Return the basis function corresponding to a degree of freedom
+     *
+     * @param idof Index of the degree of freedom
+     * @return FE_Function (vector of values at each quadrature point)
+     */
+    const FE_Function& get_basis_function(size_t idof) const {
+      return _basis_functions[idof];
+    }
+
+    /**
+     * @brief Get the x-dervative of element shape function
+     * @return Vector of FEfunction (x-derivatives evaluated in each quadrature rule)
+     */
+    const std::vector<FE_Function>& get_dx_basis_functions() const;
+
+    /**
+     * @brief Get the y-dervative of element shape function
+     * @return Vector of FEfunction (y-derivatives evaluated in each quadrature rule)
+     */
+    const std::vector<FE_Function>& get_dy_basis_functions() const;
 
     // Returns $F_T(\hat P)$, where $T$ is this triangle, $\hat P \in T$ and
     // $F_T$ is the affine transformation from the reference cell to $T$.
@@ -206,6 +241,32 @@ namespace shfem {
     real_t area() const {
       static const real_t area_of_reference_cell = 0.5;
       return area_of_reference_cell * std::abs(det_jacobian_affine_map());
+    }
+
+    /**
+     * @brief Computes the integral of f1*f2 in current element
+     *
+     * Integral is aproximated as
+     *  $$\int_{K} f_1\dot f_2 = \sum{i=0}^{N} w_i f_1(p_i) f_2(p_i),$$
+     * where $K$ is current element, $N+1$ is the number of quadrature points, and
+     * $w_i$, $p_i$ are wheights and points, respectively.
+     *
+     * @param f1 FE_Function (vector of reals) evaluated on quadrature points
+     * @param f2 FE_Function (vector of reals) evaluated on quadrature points
+     *
+     * @return Numerical approximation of $\int_{K} f_1\dot f_2$
+     */
+    real_t integrate(const FE_Function& f1, const FE_Function& f2)
+    {
+      real_t sum = 0.;
+      real_t abs_det_J = std::abs(det_jacobian_affine_map());
+      size_t nb_points = _quadrature_rule->size();
+      const std::vector<real_t>& w = _quadrature_rule->weights;
+      for (size_t i = 0; i < nb_points; ++i)
+	{
+	  sum += w[i]*f1[i]*f2[i];
+	}
+      return abs_det_J*sum;
     }
 
     /**
@@ -255,41 +316,7 @@ namespace shfem {
       return POINT(referenceX, referenceY);
     }
 
-    /**
-     * @brief Get the element shape functions (evaluated at quadrature points)
-     *
-     * Each finite element contains a vector of basis functions (one
-     * for each degree of freedom). Each basis function is defined as
-     * a vector which stores the values of bais function at the
-     * quadrature points.
-     *
-     * @return Vector of FEfunction (values in each quadrature  rule)
-     */
-    const std::vector<FE_Function>& get_basis_functions() const {
-      return _basis_functions;
-    }
 
-    /**
-     * @brief Return the basis function corresponding to a degree of freedom
-     *
-     * @param idof Index of the degree of freedom
-     * @return FE_Function (vector of values at each quadrature point)
-     */
-    const FE_Function& get_basis_function(size_t idof) const {
-      return _basis_functions[idof];
-    }
-
-    /**
-     * @brief Get the x-dervative of element shape function
-     * @return Vector of FEfunction (x-derivatives evaluated in each quadrature rule)
-     */
-    const std::vector<FE_Function>& get_dx_basis_functions() const;
-
-    /**
-     * @brief Get the y-dervative of element shape function
-     * @return Vector of FEfunction (y-derivatives evaluated in each quadrature rule)
-     */
-    const std::vector<FE_Function>& get_dy_basis_functions() const;
   };
 
   ReferenceElement FiniteElement::_reference_element = ReferenceElement();
