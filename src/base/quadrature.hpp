@@ -9,7 +9,7 @@ namespace shfem {
   };
 
   // A Quadfunction is defined by its values in the quadrature nodes
-  typedef std::vector<real_t> QuadFunction;
+  typedef std::vector<real_t> FE_Function;
 
   /// Available quadrature rules
   enum AvailableQuadRules { VerticesQR, MidpointsQR };
@@ -40,13 +40,13 @@ namespace shfem {
 
     // Nodes of the quadrature rule (on the reference element)
     template<> std::vector<Point> QuadRule<VerticesQR>::nodes =
-      {Point(0.,0.), Point(0.,1.), Point(1.,0.)};
+      {Point(0.,0.), Point(1.,0.), Point(0.,1.)};
     // Weights of the quadrature rule
-    template<> QuadFunction QuadRule<VerticesQR>::weights =
+    template<> FE_Function QuadRule<VerticesQR>::weights =
       {1./6, 1./6, 1./6};
 
     template<int QR> real_t
-    QuadRule<QR>::integrate_on_ref_element(const QuadFunction
+    QuadRule<QR>::integrate_on_ref_element(const FE_Function
 					   & values) const {
       const int n=3;
       real_t sum=0;

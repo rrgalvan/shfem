@@ -11,7 +11,7 @@ typedef shfem::dim2::Point Point;
 typedef shfem::dim2::TriangleMesh Mesh;
 typedef shfem::dim2::QuadRule<shfem::VerticesQR> VerticesQuadRule;
 
-BOOST_AUTO_TEST_CASE(ElementAreaInOrder)
+BOOST_AUTO_TEST_CASE(ElementAreaTest)
 {
   // Define mesh
   Mesh mesh;
@@ -30,7 +30,40 @@ BOOST_AUTO_TEST_CASE(ElementAreaInOrder)
   }
 }
 
-BOOST_AUTO_TEST_CASE(FiniteElementInOrder)
+inline size_t delta_kronecker(size_t i, size_t j) {
+  return (i==j) ? 1 : 0;
+}
+
+BOOST_AUTO_TEST_CASE(BasisFunctionsTest)
+{
+  // Define mesh
+  Mesh mesh;
+  mesh.read_file_msh("squared-mesh-2x2.msh");
+
+  // Define finite element and attach to it the quadrature rule
+  shfem::FiniteElement fe;
+  // Define quadrature rule.
+  VerticesQuadRule qr;
+  fe.set_quadrature_rule(qr);
+
+  for (size_t icell=0; icell<mesh.get_ncel(); ++icell)
+    {
+      fe.reinit(mesh, icell); // Compute element-specific data
+      // For each degree of freedom, i:
+      for (size_t i = 0; i<fe.get_ndofs(); ++i)
+	{
+	  // Compute i-th basis function, evaluated at quadrature nodes
+	  const shfem::FE_Function& phi_i = fe.get_basis_function(i);
+	  // For each quadrature point, j:
+	  for(size_t j=0; j<qr.size(); ++j)
+	    // For this quadrture rule, nodes are equal to dof
+	    // (vertices), therefore phi_i(node_j) = delta_kronecker(i,j)
+	    BOOST_CHECK_EQUAL(phi_i[j], delta_kronecker(i,j));
+	}
+    }
+}
+
+BOOST_AUTO_TEST_CASE(AffineMapTest)
 {
   // Define mesh
   Mesh mesh;
@@ -81,7 +114,7 @@ BOOST_AUTO_TEST_CASE(FiniteElementInOrder)
     }
 }
 
-BOOST_AUTO_TEST_CASE(QuadRuleInOrder)
+BOOST_AUTO_TEST_CASE(QuadRuleTest)
 {
   int nb_nodes = 3;
 
@@ -90,7 +123,7 @@ BOOST_AUTO_TEST_CASE(QuadRuleInOrder)
   BOOST_CHECK_EQUAL(qr.size(), nb_nodes);
 
   // Define a function on quadrature rule nodes
-  shfem::QuadFunction f(nb_nodes);
+  shfem::FE_Function f(nb_nodes);
   for(int i=0; i<nb_nodes; i++) f[i]=1.0;  // Set f={1,1,1}
 
   // Assure integral on reference triangle of previous function is correct
