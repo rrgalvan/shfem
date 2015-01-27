@@ -20,11 +20,12 @@
 #ifndef HPFEM_BASE_HPP_
 #define HPFEM_BASE_HPP_
 
-#include "shfem_base.hpp"
+#include <vector>
 
 namespace shfem {
   typedef double Real;
   typedef unsigned Index;
+  typedef std::vector<Real> FE_Function;
 }
 
 #endif // HPFEM_BASE_HPP_

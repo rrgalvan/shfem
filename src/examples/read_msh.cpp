@@ -23,37 +23,24 @@
 int main()
 {
   // Build an empty mesh object
-  shfem::dim2::TriangleMesh m;
+  shfem::TriangleMesh mesh;
 
   // Try to read mesh contents from a .msh file (for information about the
   // structure of these files, see FreeFem++ documentation).
-  try {
-    m.read_file_msh("squared-mesh-2x2.msh");
-  } catch (...) {
-    std::cerr << "Error reading mesh file" << std::endl;
-    exit(1);
-  }
+  try
+    {
+      mesh.read_file_msh("squared-mesh-2x2.msh");
+    }
+  catch (...)
+    {
+      std::cerr << "Error reading mesh file" << std::endl;
+      exit(1);
+    }
 
   // Show information about triangles and vertices
-  std::cout << "Read mesh with " << m.get_nelt() << " triangles and "
-	    << m.get_nver() << " vertices" << std::endl;
+  std::cout << "Read mesh with " << mesh.get_ncel() << " triangles and "
+	    << mesh.get_nver() << " vertices" << std::endl;
 
   // Print elements and coordinates of each vertex
-  m.print();
-
-  // Calculate determinants of affinte transformations
-  for(unsigned i=0; i<m.get_nelt(); ++i) {
-    std::cout << "Determinant of affine transormation #" << i << ": "
-	      << m.det_jacobian_affine_map(i) << std::endl;
-  }
-
-  // for(unsigned i=0; i<m.get_nt(); ++i) {
-  //   std::cout << "Determinant of inverse affine transormation #" << i << ": "
-  // 	      << m.det_J_inv_affine_transform(i) << std::endl;
-  // }
-
-  // Calculate area of each triangle
-  for(unsigned i=0; i<m.get_nelt(); ++i) {
-    std::cout << "Area of triangle " << i << ": " << m.area(i) << std::endl;
-  }
+  mesh.print();
 }

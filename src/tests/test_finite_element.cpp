@@ -8,9 +8,9 @@
 
 typedef shfem::Real Real;
 typedef shfem::Index Index;
-typedef shfem::dim2::Point Point;
-typedef shfem::dim2::TriangleMesh Mesh;
-typedef shfem::dim2::QuadRule<shfem::VerticesQR> VerticesQuadRule;
+typedef shfem::Point Point;
+typedef shfem::TriangleMesh Mesh;
+typedef shfem::QuadRule<shfem::VerticesQR> VerticesQuadRule;
 
 BOOST_AUTO_TEST_CASE(ElementAreaTest)
 {
@@ -154,23 +154,21 @@ BOOST_AUTO_TEST_CASE(IntegrateTest)
 	{
 	  // Constant function, f=1, on quadrature nodes
 	  const shfem::FE_Function f = {1., 1., 1.};
-	  shfem::Real integral_f_f = fe.integrate(f,f); // integral of f*f
-	  BOOST_CHECK_EQUAL(integral_f_f, fe.area());
-	  BOOST_CHECK_EQUAL(integral_f_f, 0.5*0.5/2.); // Area of triangle: b*h/2
+	  BOOST_CHECK_EQUAL(fe.integrate(f,f), fe.area());
+	  BOOST_CHECK_EQUAL(fe.integrate(f,f), 0.5*0.5/2.); // Area of triangle: b*h/2
 
 	  // Basis function on dof i
 	  const shfem::FE_Function& phi_i = fe.get_basis_function(i);
+
 	  // If K = Triang(P0,P1,P2), P0=(0,0), P1=(0,0.5), P2=(0.5,0.5),
 	  // then $\phi_0(x,y) = 1-2x$ and $\int_K 1-2*x dy dx =
 	  // = \int_0^0.5 \int_0^y 1-2x dy dx = 1/24$
-	  shfem::Real integral_f_phi_i = fe.integrate(f, phi_i);
-	  BOOST_CHECK_EQUAL(integral_f_phi_i, 1./24);
+	  BOOST_CHECK_EQUAL(fe.integrate(f, phi_i), 1./24);
 
 	  // $\phi_0^2(x,y) = (1-2x)^2$ and $\int_K (1-2*x) dy dx =
 	  // = \int_0^0.5 \int_0^y (1-2x) dy dx = 1/48$
 	  // But this quadrature rule is not exact for order 2 polynomials!!
-	  shfem::Real integral_phi_i_phi_i = fe.integrate(phi_i, phi_i);
-	  BOOST_CHECK_NE(integral_phi_i_phi_i, 1./48);
+	  BOOST_CHECK_NE(fe.integrate(phi_i, phi_i), 1./48);
 	}
     }
 }

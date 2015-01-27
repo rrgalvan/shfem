@@ -4,8 +4,7 @@ GCFLAGS =-O3 -Wall -std=c++11 #-fopenmp -fPIC -shared
 
 SHFEM_SRCDIR=..
 
-# TARGET = read_msh
-TARGET = integrate
+TARGET = read_msh integrate
 
 all: $(TARGET)
 

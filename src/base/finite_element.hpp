@@ -29,7 +29,7 @@ namespace shfem {
 
   struct ReferenceElement
   {
-    typedef dim2::Point POINT;
+    typedef Point POINT;
     const std::vector<POINT> nodes;
     // Basis functions
     static Real phi_0(Real x, Real y) {return 1-x-y;}
@@ -66,10 +66,10 @@ namespace shfem {
   class FiniteElement {
   public:
     enum {NDOFS=3};
-    typedef dim2::TriangleMesh MESH;
-    typedef dim2::Point POINT;
+    typedef TriangleMesh MESH;
+    typedef Point POINT;
     typedef MESH::CELL CELL;
-    typedef dim2::QuadRule<VerticesQR> QUADRULE;
+    typedef QuadRule<VerticesQR> QUADRULE;
 
     static ReferenceElement _reference_element;
 

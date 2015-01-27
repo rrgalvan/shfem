@@ -8,7 +8,7 @@
 
 BOOST_AUTO_TEST_CASE(MeshReadInOrder)
 {
-  shfem::dim2::TriangleMesh m;
+  shfem::TriangleMesh m;
   m.read_file_msh("squared-mesh-2x2.msh");
 
   unsigned nb_triangles = m.get_ncel(), expected_nb_triangles = 8;
