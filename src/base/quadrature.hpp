@@ -9,7 +9,7 @@ namespace shfem {
   };
 
   // A Quadfunction is defined by its values in the quadrature nodes
-  typedef std::vector<real_t> FE_Function;
+  typedef std::vector<Real> FE_Function;
 
   /// Available quadrature rules
   enum AvailableQuadRules { VerticesQR, MidpointsQR };
@@ -20,14 +20,14 @@ namespace shfem {
     template <int QR>
     struct QuadRule : public BaseQuadRule {
       static std::vector<Point> nodes;
-      static std::vector<real_t> weights;
+      static std::vector<Real> weights;
 
       /**
        * @brief Number of nodes and weights in current quadrature rule
        *
        * @return Number of nodes and weights
        */
-      size_t size() const { return weights.size();}
+      Index size() const { return weights.size();}
 
       /**
        * @brief Integrate a function (vector) on the reference elemenet
@@ -35,7 +35,7 @@ namespace shfem {
        *               quadrature point
        * @return Numerical approximation of the integral
        */
-      real_t integrate_on_ref_element(const std::vector<real_t>& values) const;
+      Real integrate_on_ref_element(const std::vector<Real>& values) const;
     };
 
     // Nodes of the quadrature rule (on the reference element)
@@ -45,14 +45,14 @@ namespace shfem {
     template<> FE_Function QuadRule<VerticesQR>::weights =
       {1./6, 1./6, 1./6};
 
-    template<int QR> real_t
+    template<int QR> Real
     QuadRule<QR>::integrate_on_ref_element(const FE_Function
 					   & values) const {
       const int n=3;
-      real_t sum=0;
+      Real sum=0;
       for(int i=0; i<n;i++) {
-	real_t weight = this->weights[i];
-	real_t value = values[i];
+	Real weight = this->weights[i];
+	Real value = values[i];
 	sum += weight * value;
       }
       return sum;

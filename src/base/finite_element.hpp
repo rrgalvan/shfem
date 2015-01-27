@@ -25,19 +25,33 @@
 
 namespace shfem {
 
-  using FUNCTION_R2 = real_t(*)(real_t,real_t); // C++11 syntax
+  using FUNCTION_R2 = Real(*)(Real,Real); // C++11 syntax
 
   struct ReferenceElement
   {
     typedef dim2::Point POINT;
     const std::vector<POINT> nodes;
-    static real_t phi_0(real_t x, real_t y) {return 1-x-y;}
-    static real_t phi_1(real_t x, real_t y) {return x;}
-    static real_t phi_2(real_t x, real_t y) {return y;}
+    // Basis functions
+    static Real phi_0(Real x, Real y) {return 1-x-y;}
+    static Real phi_1(Real x, Real y) {return x;}
+    static Real phi_2(Real x, Real y) {return y;}
+    // Derivatives of basis functions
+    static Real dx_phi_0(Real x, Real y) {return -1;}
+    static Real dx_phi_1(Real x, Real y) {return x;}
+    static Real dx_phi_2(Real x, Real y) {return 0;}
+    static Real dy_phi_0(Real x, Real y) {return -1;}
+    static Real dy_phi_1(Real x, Real y) {return 0;}
+    static Real dy_phi_2(Real x, Real y) {return 1;}
+
     const std::vector<FUNCTION_R2> basis_functions;
+    const std::vector<FUNCTION_R2> dx_basis_functions;
+    const std::vector<FUNCTION_R2> dy_basis_functions;
+
     ReferenceElement() :
       nodes({POINT(0.,0.), POINT(1.,0.), POINT(0.,1.)}),
-      basis_functions({phi_0, phi_1, phi_2}) {}
+      basis_functions({phi_0, phi_1, phi_2}),
+      dx_basis_functions({dx_phi_0, dx_phi_1, dx_phi_2}),
+      dy_basis_functions({dy_phi_0, dy_phi_1, dy_phi_2}) {}
   };
 
   /// @brief Stores information for a concrete finite element
@@ -60,10 +74,12 @@ namespace shfem {
     static ReferenceElement _reference_element;
 
   protected:
-    const CELL* _cell;		/**< Topological information (global indices of vertex) */
+    const CELL* _cell;	/**< Topological information (global indices of vertex) */
     std::vector<POINT> _geometry; /**< Geometrical information (coord. of vertex) */
     const QUADRULE* _quadrature_rule; /**< Quadrature rule  */
-    std::vector<FE_Function> _basis_functions; /**< Basis functions evaluated at quadrature points */
+    std::vector<FE_Function> _basis_functions; /**< Basis functions evaluated on points */
+    std::vector<FE_Function> _dx_basis_functions; /**< x-derivative of basis functions on quadrature points */
+    std::vector<FE_Function> _dy_basis_functions; /**< y_derivative of basis functions on quadrature points */
 
   public:
     /**
@@ -86,49 +102,54 @@ namespace shfem {
      *
      *   - Topological (global indices) and geometric (coordinates)
      *     information for vertices and also,
-     *   - Evaluation of shape functions and of its derivatives on
-     *     quadrature nodes)
+     *   - Evaluation of shape functions (and of its derivatives) on
+     *     quadrature nodes
      *
      * @param mesh Mesh for obtaining topological and geometric informtion
      * @param idx_cell Global index in the mesh of current cell (Element)
      */
-    void reinit(const MESH& mesh, index_t idx_cell) {
+    void reinit(const MESH& mesh, Index idx_cell) {
+      //,--------------------------------------------------
+      //| Compute global index and coordinates for vertices
+      //`--------------------------------------------------
       _cell = &mesh.get_cell(idx_cell);
-      index_t idv0 = _cell->idv0; // Global index for vertex 1
-      index_t idv1 = _cell->idv1; // Global index for vertex 2
-      index_t idv2 = _cell->idv2; // Global index for vertex 3
-      size_t ndofs = get_ndofs();
+      Index idv0 = _cell->idv0; // Global index for vertex 0
+      Index idv1 = _cell->idv1; // Global index for vertex 1
+      Index idv2 = _cell->idv2; // Global index for vertex 2
+      Index ndofs = get_ndofs();
       _geometry.resize(ndofs);
-      _geometry[0] = mesh.get_vertex(idv0);
-      _geometry[1] = mesh.get_vertex(idv1);
-      _geometry[2] = mesh.get_vertex(idv2);
+      _geometry[0] = mesh.get_vertex(idv0); // Coord. of vertex 0
+      _geometry[1] = mesh.get_vertex(idv1); // Coord. of vertex 2
+      _geometry[2] = mesh.get_vertex(idv2); // Coord. of vertex 2
 
-      // Compute element basis functions evaluated at the quadrature points.
+      //,------------------------------------------------------------------
+      //| Evaluate basis functions (and its derivatives) on quadrature nodes
+      //`------------------------------------------------------------------
       _basis_functions.resize(ndofs);
-      for(size_t i=0; i<ndofs; ++i)
+      _dx_basis_functions.resize(ndofs);
+      _dy_basis_functions.resize(ndofs);
+      for(Index i=0; i<ndofs; ++i)
 	{
 	  // std::cout << "### idof=" << i << std::endl;
-	  size_t nb_quad_nodes = _quadrature_rule->size();
+	  // Define i-th basis functions
+	  Index nb_quad_nodes = _quadrature_rule->size();
 	  _basis_functions[i].resize(nb_quad_nodes);
-	  // // Get physical basis function (for i-th degree of freedom)
-	  // const FE_Function& phi = _basis_functions[i];
-	  // Get reference-element basis function (for i-th dof)
+	  _dx_basis_functions[i].resize(nb_quad_nodes);
+	  _dy_basis_functions[i].resize(nb_quad_nodes);
+	  // Define i-th basis function (on the reference-element)
 	  FUNCTION_R2 hat_phi_i = _reference_element.basis_functions[i];
+	  FUNCTION_R2 dx_hat_phi_i = _reference_element.dx_basis_functions[i];
+	  FUNCTION_R2 dy_hat_phi_i = _reference_element.dy_basis_functions[i];
 	  // Loop on quadrature nodes
-	  for(index_t j=0; j<nb_quad_nodes; ++j)
+	  for(Index j=0; j<nb_quad_nodes; ++j)
 	    {
 	      // Get quadrature node (at reference triangle)
 	      const POINT& hat_P_j = _quadrature_rule->nodes[j];
 	      // Apply reference basis function on that node
 	      _basis_functions[i][j] = hat_phi_i(hat_P_j.x, hat_P_j.y);
+	      _dx_basis_functions[i][j] = dx_hat_phi_i(hat_P_j.x, hat_P_j.y);
+	      _dy_basis_functions[i][j] = dy_hat_phi_i(hat_P_j.x, hat_P_j.y);
 	    }
-	  // for(index_t j=0; j<nb_quad_nodes; ++j)
-	  //   {
-	  //     std::cout << "_basis_functions[" << i << "][" << j <<  "] = "
-	  // 		<< _basis_functions[i][j] << std::endl;
-
-	  //   }
-	  // std::cout << std::endl;
 	}
     }
 
@@ -136,7 +157,7 @@ namespace shfem {
      * @brief Get number of degrees of freedom for current element
      * @return Number of degrees of freedom
      */
-    size_t get_ndofs() const {
+    Index get_ndofs() const {
       return NDOFS;
     }
 
@@ -176,20 +197,44 @@ namespace shfem {
     const POINT& get_vertex0() const { return _geometry[0]; }
     const POINT& get_vertex1() const { return _geometry[1]; }
     const POINT& get_vertex2() const { return _geometry[2]; }
-    const POINT& get_vertex(index_t i) const { return _geometry[i]; }
+    const POINT& get_vertex(Index i) const { return _geometry[i]; }
 
     /**
-     * @brief Get the element shape functions (evaluated at quadrature points)
+     * @brief Get the element shape functions (evaluated on quadrature points)
      *
      * Each finite element contains a vector of basis functions (one
      * for each degree of freedom). Each basis function is defined as
-     * a vector which stores the values of bais function at the
+     * a FE_Function which stores the values of basis function at the
      * quadrature points.
      *
-     * @return Vector of FE_function (values in each quadrature  rule)
+     * @return Vector of FE_function (values on each quadrature  rule)
      */
     const std::vector<FE_Function>& get_basis_functions() const {
       return _basis_functions;
+    }
+
+    /**
+     * @brief Get x-derivative of element shape functions (on quadrature points)
+     *
+     * Each derivative function is defined as a FE_Function, which stores
+     * the values of the derivative at the quadrature points.
+     *
+     * @return Vector of FE_function (values of derivative on each quadrature rule)
+     */
+    const std::vector<FE_Function>& get_dx_basis_functions() const {
+      return _dx_basis_functions;
+    }
+
+    /**
+     * @brief Get y-derivative of element shape functions (on quadrature points)
+     *
+     * Each derivative function is defined as a FE_Function, which stores
+     * the values of the derivative at the quadrature points.
+     *
+     * @return Vector of FE_function (values of derivative on each quadrature rule)
+     */
+    const std::vector<FE_Function>& get_dy_basis_functions() const {
+      return _dy_basis_functions;
     }
 
     /**
@@ -198,21 +243,25 @@ namespace shfem {
      * @param idof Index of the degree of freedom
      * @return FE_Function (vector of values at each quadrature point)
      */
-    const FE_Function& get_basis_function(size_t idof) const {
+    const FE_Function& get_basis_function(Index idof) const {
       return _basis_functions[idof];
     }
 
     /**
-     * @brief Get the x-dervative of element shape function
+     * @brief Get the x-dervative of the shape function corresponding to a dof
      * @return Vector of FEfunction (x-derivatives evaluated in each quadrature rule)
      */
-    const std::vector<FE_Function>& get_dx_basis_functions() const;
+    const FE_Function& get_dx_basis_function(Index idof) const {
+      return _dx_basis_functions[idof];
+    }
 
     /**
-     * @brief Get the y-dervative of element shape function
+     * @brief Get the y-dervative of the shape function corresponding to a dof
      * @return Vector of FEfunction (y-derivatives evaluated in each quadrature rule)
      */
-    const std::vector<FE_Function>& get_dy_basis_functions() const;
+    const FE_Function& get_dy_basis_function(Index idof) const {
+      return _dy_basis_functions[idof];
+    }
 
     // Returns $F_T(\hat P)$, where $T$ is this triangle, $\hat P \in T$ and
     // $F_T$ is the affine transformation from the reference cell to $T$.
@@ -226,10 +275,10 @@ namespace shfem {
      *
      * @return Determinant of Jacobian
      */
-    real_t det_jacobian_affine_map() const {
-      real_t x0 = get_vertex0().x, y0 = get_vertex0().y;
-      real_t x1 = get_vertex1().x, y1 = get_vertex1().y;
-      real_t x2 = get_vertex2().x, y2 = get_vertex2().y;
+    Real det_jacobian_affine_map() const {
+      Real x0 = get_vertex0().x, y0 = get_vertex0().y;
+      Real x1 = get_vertex1().x, y1 = get_vertex1().y;
+      Real x2 = get_vertex2().x, y2 = get_vertex2().y;
       return (x1-x0)*(y2-y0) - (y1-y0)*(x2-x0);
     }
 
@@ -238,8 +287,8 @@ namespace shfem {
      *
      * @return Area of cell
      */
-    real_t area() const {
-      static const real_t area_of_reference_cell = 0.5;
+    Real area() const {
+      static const Real area_of_reference_cell = 0.5;
       return area_of_reference_cell * std::abs(det_jacobian_affine_map());
     }
 
@@ -256,13 +305,13 @@ namespace shfem {
      *
      * @return Numerical approximation of $\int_{K} f_1\dot f_2$
      */
-    real_t integrate(const FE_Function& f1, const FE_Function& f2)
+    Real integrate(const FE_Function& f1, const FE_Function& f2)
     {
-      real_t sum = 0.;
-      real_t abs_det_J = std::abs(det_jacobian_affine_map());
-      size_t nb_points = _quadrature_rule->size();
-      const std::vector<real_t>& w = _quadrature_rule->weights;
-      for (size_t i = 0; i < nb_points; ++i)
+      Real sum = 0.;
+      Real abs_det_J = std::abs(det_jacobian_affine_map());
+      Index nb_points = _quadrature_rule->size();
+      const std::vector<Real>& w = _quadrature_rule->weights;
+      for (Index i = 0; i < nb_points; ++i)
 	{
 	  sum += w[i]*f1[i]*f2[i];
 	}
@@ -282,10 +331,10 @@ namespace shfem {
      * @return Point resulting from application of the affine map
      */
     POINT apply_affine_map(const POINT& point) {
-      real_t referenceX = point.x, referenceY = point.y;
-      real_t x0 = get_vertex0().x, y0 = get_vertex0().y;
-      real_t x1 = get_vertex1().x, y1 = get_vertex1().y;
-      real_t x2 = get_vertex2().x, y2 = get_vertex2().y;
+      Real referenceX = point.x, referenceY = point.y;
+      Real x0 = get_vertex0().x, y0 = get_vertex0().y;
+      Real x1 = get_vertex1().x, y1 = get_vertex1().y;
+      Real x2 = get_vertex2().x, y2 = get_vertex2().y;
       float aux = 1-referenceX-referenceY;;
       return POINT(x0*aux + x1*referenceX + x2*referenceY,
 		   y0*aux + y1*referenceX + y2*referenceY);
@@ -305,14 +354,14 @@ namespace shfem {
      */
     POINT apply_inv_affine_map(const POINT& point)
     {
-      real_t x = point.x, y = point.y;
-      real_t x0 = get_vertex0().x, y0 = get_vertex0().y;
-      real_t x1 = get_vertex1().x, y1 = get_vertex1().y;
-      real_t x2 = get_vertex2().x, y2 = get_vertex2().y;
-      real_t inv_det_B = 1.0/((x1-x0)*(y2-y0) - (y1-y0)*(x2-x0));
-      real_t dx = x-x0, dy = y-y0;
-      real_t referenceX = (dx*(y2-y0) + (x0-x2)*dy)*inv_det_B;
-      real_t referenceY = (dx*(y0-y1) + (x1-x0)*dy)*inv_det_B;
+      Real x = point.x, y = point.y;
+      Real x0 = get_vertex0().x, y0 = get_vertex0().y;
+      Real x1 = get_vertex1().x, y1 = get_vertex1().y;
+      Real x2 = get_vertex2().x, y2 = get_vertex2().y;
+      Real inv_det_B = 1.0/((x1-x0)*(y2-y0) - (y1-y0)*(x2-x0));
+      Real dx = x-x0, dy = y-y0;
+      Real referenceX = (dx*(y2-y0) + (x0-x2)*dy)*inv_det_B;
+      Real referenceY = (dx*(y0-y1) + (x1-x0)*dy)*inv_det_B;
       return POINT(referenceX, referenceY);
     }
 

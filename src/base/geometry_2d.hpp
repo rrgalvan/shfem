@@ -28,8 +28,7 @@
 
 namespace shfem {
 
-  class BaseMesh {
-  };
+  class BaseMesh {};
 
   namespace dim2 {
 
@@ -38,9 +37,9 @@ namespace shfem {
     //`---------
     struct Point {
       Point() {}
-      Point(real_t xx, real_t yy) : x(xx), y(yy) {}
-      real_t x;
-      real_t y;
+      Point(Real xx, Real yy) : x(xx), y(yy) {}
+      Real x;
+      Real y;
       void print() const;
     };
 
@@ -60,13 +59,13 @@ namespace shfem {
     //  */
     // struct Triangle {
     //   Triangle() {}
-    //   Triangle(index_t i1, index_t i2, index_t i3): idv1(i1), idv2(i2), idv3(i3) {}
+    //   Triangle(Index i1, Index i2, Index i3): idv1(i1), idv2(i2), idv3(i3) {}
     //   // Global index of vertex 1
-    //   index_t idv1;
+    //   Index idv1;
     //   // Global index of vertex 2
-    //   index_t idv2;
+    //   Index idv2;
     //   // Global index of vertex 3
-    //   index_t idv3;
+    //   Index idv3;
     // };
 
     /**
@@ -77,13 +76,13 @@ namespace shfem {
      */
     struct Triangle {
       Triangle() {}
-      Triangle(index_t i0, index_t i1, index_t i2): idv0(i0), idv1(i1), idv2(i2) {}
+      Triangle(Index i0, Index i1, Index i2): idv0(i0), idv1(i1), idv2(i2) {}
       // Global index of vertex 0
-      index_t idv0;
+      Index idv0;
       // Global index of vertex 1
-      index_t idv1;
+      Index idv1;
       // Global index of vertex 2
-      index_t idv2;
+      Index idv2;
     };
 
     /**
@@ -120,19 +119,19 @@ namespace shfem {
     public:
       /// @brief Read number of vertices in current mesh
       /// @return number of vertices
-      index_t get_nver() const { return vertices.size(); }
+      Index get_nver() const { return vertices.size(); }
 
       /// @brief Read number of cells in current mesh
       /// @return number of cells
-      index_t get_ncel() const { return cells.size(); }
+      Index get_ncel() const { return cells.size(); }
 
       /// @brief Get a concrete cell contained in current mesh
       /// @return (Reference to) a cell
-      const CELL& get_cell(index_t i) const { return cells[i];}
+      const CELL& get_cell(Index i) const { return cells[i];}
 
       /// @brief Get a concrete vertex contained in current mesh
       /// @return (Reference to) a Point
-      const Point& get_vertex(index_t i) const { return vertices[i];}
+      const Point& get_vertex(Index i) const { return vertices[i];}
 
       /// @brief Read mesh from a medit .msh file (e.g. wrote by FreeFem++)
       /// @param filename Name of a file containing the mesh
@@ -150,7 +149,7 @@ namespace shfem {
      * and vertices of each cell
      */
     void TriangleMesh::print() const {
-      for(index_t i=0; i<get_ncel(); ++i) {
+      for(Index i=0; i<get_ncel(); ++i) {
 	const Triangle& T = cells[i];
 	std::cout << "Cell " << i << ":" << std::endl;
 	vertices[ T.idv0 ].print();
@@ -176,7 +175,7 @@ namespace shfem {
       this->cells = std::vector<CELL>(ncel);
 
       for(int i=0; i<nver; i++) {
-	real_t x, y, label;
+	Real x, y, label;
 	meshfile >> x >> y >> label;
 	Point p(x, y);
 	vertices[i]=p;

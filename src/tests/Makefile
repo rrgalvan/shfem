@@ -13,11 +13,7 @@ all: $(TARGET)
 #REMARK:
 # It is important to locate "-lboost_unit_test_framework" at end of line,
 # see http://askubuntu.com/questions/104316/problem-with-executing-boost-library
-
-test_read_msh: test_read_msh.cpp
-	$(GCC) $(GCFLAGS) -I$(SHFEM_SRCDIR) $< -o $@ $(BOOST_UNIT_TEST_LIB)
-
-test_finite_element: test_finite_element.cpp
+%: %.cpp
 	$(GCC) $(GCFLAGS) -I$(SHFEM_SRCDIR) $< -o $@ $(BOOST_UNIT_TEST_LIB)
 
 run: $(TARGET)

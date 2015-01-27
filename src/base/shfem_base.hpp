@@ -1,4 +1,4 @@
-// shfem_base.hpp --- 
+// shfem_base.hpp ---
 
 // Copyright (C) 2014 Rafa Rodríguez Galván <rafaelDOTrodriguezATucaDOTes>
 
@@ -23,8 +23,8 @@
 #include "shfem_base.hpp"
 
 namespace shfem {
-  typedef double real_t;
-  typedef unsigned index_t;
+  typedef double Real;
+  typedef unsigned Index;
 }
 
 #endif // HPFEM_BASE_HPP_

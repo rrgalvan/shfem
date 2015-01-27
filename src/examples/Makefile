@@ -4,12 +4,21 @@ GCFLAGS =-O3 -Wall -std=c++11 #-fopenmp -fPIC -shared
 
 SHFEM_SRCDIR=..
 
-TARGET = read_msh
+# TARGET = read_msh
+TARGET = integrate
 
 all: $(TARGET)
 
-read_msh: read_msh.cpp
+%: %.cpp
 	$(GCC) $(GCFLAGS) -I$(SHFEM_SRCDIR) $< -o $@
 
-clean: 
+run: $(TARGET)
+	@for program in $(TARGET); do \
+		echo "========================================"; \
+		echo "Running $$program..."; \
+		echo "========================================"; \
+		./$$program ; \
+	done
+
+clean:
 	rm -rf *.a *.o $(TARGET)
