@@ -6,7 +6,7 @@
 #define BOOST_TEST_MODULE BasicTests
 #include <boost/test/unit_test.hpp>
 
-BOOST_AUTO_TEST_CASE(MeshReadInOrder)
+BOOST_AUTO_TEST_CASE(MeshReadTest)
 {
   shfem::TriangleMesh m;
   m.read_file_msh("squared-mesh-2x2.msh");
