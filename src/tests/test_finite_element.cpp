@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(BasisFunctionsTest)
       for (Index i = 0; i<fe.get_ndofs(); ++i)
 	{
 	  // Compute i-th basis function, evaluated at quadrature nodes
-	  const shfem::FE_Function& phi_i = fe.get_basis_function(i);
+	  const shfem::FE_Function& phi_i = fe.get_phi(i);
 	  // For each quadrature point, j:
 	  for(Index j=0; j<qr.size(); ++j)
 	    // For this quadrture rule, nodes are equal to dof
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(IntegrateTest)
 	  BOOST_CHECK_EQUAL(fe.integrate(f,f), 0.5*0.5/2.); // Area of triangle: b*h/2
 
 	  // Basis function on dof i
-	  const shfem::FE_Function& phi_i = fe.get_basis_function(i);
+	  const shfem::FE_Function& phi_i = fe.get_phi(i);
 
 	  // If K = Triang(P0,P1,P2), P0=(0,0), P1=(0,0.5), P2=(0.5,0.5),
 	  // then $\phi_0(x,y) = 1-2x$ and $\int_K 1-2*x dy dx =

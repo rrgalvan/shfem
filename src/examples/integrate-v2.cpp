@@ -63,21 +63,21 @@ int main()
 
 	  // Get x-derivative of i-th basis function (FE_Function is a vector
 	  // wich stores values on each quadrature point)
-	  const FE_Function& dx_phi_i = fe.get_dx_basis_function(i);
+	  const FE_Function& dx_phi_i = fe.get_dx_phi(i);
 	  // Get also y-derivatives on each quadrature point
-	  const FE_Function& dy_phi_i = fe.get_dy_basis_function(i);
+	  const FE_Function& dy_phi_i = fe.get_dy_phi(i);
 
 	  // For each degree of freedom, j:
 	  for (Index j = 0; j<ndofs; ++j)
 	    {
 	      std::cout << std::endl;
 	      // Compute integral of product of x-derivatives
-	      const FE_Function& dx_phi_j = fe.get_dx_basis_function(j);
+	      const FE_Function& dx_phi_j = fe.get_dx_phi(j);
 	      Real Kx_ij = fe.integrate(dx_phi_i, dx_phi_j);
 	      std::cout << "Kx[" << i << "][" << j << "]=" << Kx_ij << std::endl;
 
 	      // Compute integral of product of y-derivatives
-	      const FE_Function& dy_phi_j = fe.get_dy_basis_function(j);
+	      const FE_Function& dy_phi_j = fe.get_dy_phi(j);
 	      Real Ky_ij = fe.integrate(dy_phi_i, dy_phi_j);
 	      std::cout << "Ky[" << i << "][" << j << "]=" << Ky_ij << std::endl;
 

@@ -44,14 +44,14 @@ namespace shfem {
     static Real dy_phi_2(Real x, Real y) {return 1;}
 
     const std::vector<FUNCTION_R2> basis_functions;
-    const std::vector<FUNCTION_R2> dx_basis_functions;
-    const std::vector<FUNCTION_R2> dy_basis_functions;
+    const std::vector<FUNCTION_R2> dx_phi;
+    const std::vector<FUNCTION_R2> dy_phi;
 
     ReferenceElement() :
       nodes({POINT(0.,0.), POINT(1.,0.), POINT(0.,1.)}),
       basis_functions({phi_0, phi_1, phi_2}),
-      dx_basis_functions({dx_phi_0, dx_phi_1, dx_phi_2}),
-      dy_basis_functions({dy_phi_0, dy_phi_1, dy_phi_2}) {}
+      dx_phi({dx_phi_0, dx_phi_1, dx_phi_2}),
+      dy_phi({dy_phi_0, dy_phi_1, dy_phi_2}) {}
   };
 
   /// @brief Stores information for a concrete finite element
@@ -77,9 +77,9 @@ namespace shfem {
     const CELL* _cell;	/**< Topological information (global indices of vertex) */
     std::vector<POINT> _geometry; /**< Geometrical information (coord. of vertex) */
     const QUADRULE* _quadrature_rule; /**< Quadrature rule  */
-    std::vector<FE_Function> _basis_functions; /**< Basis functions evaluated on points */
-    std::vector<FE_Function> _dx_basis_functions; /**< x-derivative of basis functions on quadrature points */
-    std::vector<FE_Function> _dy_basis_functions; /**< y_derivative of basis functions on quadrature points */
+    std::vector<FE_Function> _phi; /**< Basis functions evaluated on points */
+    std::vector<FE_Function> _dx_phi; /**< x-derivative of basis functions on quadrature points */
+    std::vector<FE_Function> _dy_phi; /**< y_derivative of basis functions on quadrature points */
 
   public:
     /**
@@ -116,6 +116,7 @@ namespace shfem {
       Index idv0 = _cell->idv0; // Global index for vertex 0
       Index idv1 = _cell->idv1; // Global index for vertex 1
       Index idv2 = _cell->idv2; // Global index for vertex 2
+
       Index ndofs = get_ndofs();
       _geometry.resize(ndofs);
       _geometry[0] = mesh.get_vertex(idv0); // Coord. of vertex 0
@@ -125,30 +126,30 @@ namespace shfem {
       //,------------------------------------------------------------------
       //| Evaluate basis functions (and its derivatives) on quadrature nodes
       //`------------------------------------------------------------------
-      _basis_functions.resize(ndofs);
-      _dx_basis_functions.resize(ndofs);
-      _dy_basis_functions.resize(ndofs);
+      _phi.resize(ndofs);
+      _dx_phi.resize(ndofs);
+      _dy_phi.resize(ndofs);
       for(Index i=0; i<ndofs; ++i)
 	{
 	  // std::cout << "### idof=" << i << std::endl;
 	  // Define i-th basis functions
 	  Index nb_quad_nodes = _quadrature_rule->size();
-	  _basis_functions[i].resize(nb_quad_nodes);
-	  _dx_basis_functions[i].resize(nb_quad_nodes);
-	  _dy_basis_functions[i].resize(nb_quad_nodes);
+	  _phi[i].resize(nb_quad_nodes);
+	  _dx_phi[i].resize(nb_quad_nodes);
+	  _dy_phi[i].resize(nb_quad_nodes);
 	  // Define i-th basis function (on the reference-element)
 	  FUNCTION_R2 hat_phi_i = _reference_element.basis_functions[i];
-	  FUNCTION_R2 dx_hat_phi_i = _reference_element.dx_basis_functions[i];
-	  FUNCTION_R2 dy_hat_phi_i = _reference_element.dy_basis_functions[i];
+	  FUNCTION_R2 dx_hat_phi_i = _reference_element.dx_phi[i];
+	  FUNCTION_R2 dy_hat_phi_i = _reference_element.dy_phi[i];
 	  // Loop on quadrature nodes
 	  for(Index j=0; j<nb_quad_nodes; ++j)
 	    {
 	      // Get quadrature node (at reference triangle)
 	      const POINT& hat_P_j = _quadrature_rule->nodes[j];
 	      // Apply reference basis function on that node
-	      _basis_functions[i][j] = hat_phi_i(hat_P_j.x, hat_P_j.y);
-	      _dx_basis_functions[i][j] = dx_hat_phi_i(hat_P_j.x, hat_P_j.y);
-	      _dy_basis_functions[i][j] = dy_hat_phi_i(hat_P_j.x, hat_P_j.y);
+	      _phi[i][j] = hat_phi_i(hat_P_j.x, hat_P_j.y);
+	      _dx_phi[i][j] = dx_hat_phi_i(hat_P_j.x, hat_P_j.y);
+	      _dy_phi[i][j] = dy_hat_phi_i(hat_P_j.x, hat_P_j.y);
 	    }
 	}
     }
@@ -209,8 +210,8 @@ namespace shfem {
      *
      * @return Vector of FE_function (values on each quadrature  rule)
      */
-    const std::vector<FE_Function>& get_basis_functions() const {
-      return _basis_functions;
+    const std::vector<FE_Function>& get_phi() const {
+      return _phi;
     }
 
     /**
@@ -221,8 +222,8 @@ namespace shfem {
      *
      * @return Vector of FE_function (values of derivative on each quadrature rule)
      */
-    const std::vector<FE_Function>& get_dx_basis_functions() const {
-      return _dx_basis_functions;
+    const std::vector<FE_Function>& get_dx_phi() const {
+      return _dx_phi;
     }
 
     /**
@@ -233,8 +234,8 @@ namespace shfem {
      *
      * @return Vector of FE_function (values of derivative on each quadrature rule)
      */
-    const std::vector<FE_Function>& get_dy_basis_functions() const {
-      return _dy_basis_functions;
+    const std::vector<FE_Function>& get_dy_phi() const {
+      return _dy_phi;
     }
 
     /**
@@ -243,24 +244,24 @@ namespace shfem {
      * @param idof Index of the degree of freedom
      * @return FE_Function (vector of values at each quadrature point)
      */
-    const FE_Function& get_basis_function(Index idof) const {
-      return _basis_functions[idof];
+    const FE_Function& get_phi(Index idof) const {
+      return _phi[idof];
     }
 
     /**
      * @brief Get the x-dervative of the shape function corresponding to a dof
      * @return Vector of FEfunction (x-derivatives evaluated in each quadrature rule)
      */
-    const FE_Function& get_dx_basis_function(Index idof) const {
-      return _dx_basis_functions[idof];
+    const FE_Function& get_dx_phi(Index idof) const {
+      return _dx_phi[idof];
     }
 
     /**
      * @brief Get the y-dervative of the shape function corresponding to a dof
      * @return Vector of FEfunction (y-derivatives evaluated in each quadrature rule)
      */
-    const FE_Function& get_dy_basis_function(Index idof) const {
-      return _dy_basis_functions[idof];
+    const FE_Function& get_dy_phi(Index idof) const {
+      return _dy_phi[idof];
     }
 
     // Returns $F_T(\hat P)$, where $T$ is this triangle, $\hat P \in T$ and

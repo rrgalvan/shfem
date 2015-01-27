@@ -26,12 +26,11 @@ int main()
   // Try to read mesh contents from a .msh file (for information about the
   // structure of these files, see FreeFem++ documentation).
   TriangleMesh mesh;
-  try { mesh.read_file_msh("squared-mesh-2x2.msh"); }
-  catch (...)
-    {
-      std::cerr << "Error reading mesh file" << std::endl;
-      exit(1);
-    }
+  try {
+    mesh.read_file_msh("squared-mesh-2x2.msh"); }
+  catch (...) {
+    std::cerr << "Error reading mesh file" << std::endl;
+    exit(1); }
 
   // Define generic finite element
   FiniteElement fe;
@@ -48,12 +47,13 @@ int main()
       // functions (and of its derivatives) on quadrature nodes
       fe.reinit(mesh, r);
 
-      Index ndofs = fe.get_ndofs();
-      // Get x-derivatives basis functions (a FE_Function is a vector
-      // wich stores values on each quadrature point)
-      const std::vector<FE_Function>& dx_phi = fe.get_dx_basis_functions();
-      const std::vector<FE_Function>& dy_phi = fe.get_dy_basis_functions();
+      // Get x-derivatives of all the basis functions of curent element
+      // (a FE_Function is a vector wich stores values quadrature points)
+      const std::vector<FE_Function>& dx_phi = fe.get_dx_phi();
+      // Get also y-derivatives of basis functions
+      const std::vector<FE_Function>& dy_phi = fe.get_dy_phi();
 
+      Index ndofs = fe.get_ndofs();
       // For each degree of freedom, i:
       for (Index i = 0; i<ndofs; ++i)
 	{
