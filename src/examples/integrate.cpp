@@ -1,6 +1,6 @@
 // integrate.cpp ---
 
-// Copyright (C) 2014 Rafa Rodríguez Galván <rafaelDOTrodriguezATucaDOTes>
+// Copyright (C) 2015 Rafa Rodríguez Galván <rafaelDOTrodriguezATucaDOTes>
 
 // Author: Rafa Rodríguez Galván
 
@@ -43,22 +43,23 @@ int main()
   for (Index r=0; r<mesh.get_ncel(); ++r)
     {
       std::cout << "Cell: r=" << r << std::endl << std::endl;
+
       // Compute element-specific data for current cell, including values of basis
       // functions (and of its derivatives) on quadrature nodes
       fe.reinit(mesh, r);
 
       // Get x-derivatives of all the basis functions of curent element
-      // (a FE_Function is a vector wich stores values quadrature points)
+      // (a FE_Function is a vector wich stores values at quadrature points)
       const std::vector<FE_Function>& dx_phi = fe.get_dx_phi();
       // Get also y-derivatives of basis functions
       const std::vector<FE_Function>& dy_phi = fe.get_dy_phi();
 
       Index ndofs = fe.get_ndofs();
       // For each degree of freedom, i:
-      for (Index i = 0; i<ndofs; ++i)
+      for (Index i = 0; i < ndofs; ++i)
 	{
 	  // For each degree of freedom, j:
-	  for (Index j = 0; j<ndofs; ++j)
+	  for (Index j = 0; j < ndofs; ++j)
 	    {
 	      // Compute integral of product of x-derivatives
 	      Real Kx_ij = fe.integrate(dx_phi[i], dx_phi[j]);

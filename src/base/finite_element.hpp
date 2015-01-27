@@ -1,6 +1,6 @@
 // finite_element.hpp ---
 
-// Copyright (C) 2014 Rafa Rodríguez Galván <rafaelDOTrodriguezATucaDOTes>
+// Copyright (C) 2015 Rafa Rodríguez Galván <rafaelDOTrodriguezATucaDOTes>
 
 // Author: Rafa Rodríguez Galván
 
