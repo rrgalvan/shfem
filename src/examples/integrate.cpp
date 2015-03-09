@@ -32,27 +32,31 @@ int main()
     std::cerr << "Error reading mesh file" << std::endl;
     exit(1); }
 
-  // Define generic finite element
-  FiniteElement fe;
+  // Define quadrature rule with nodes located at vertices of the reference triangle
+  VerticesQuadRule quad_rule;
 
-  // Use quadrature rule with nodes located at vertices of the reference triangle
-  VerticesQuadRule qr;
-  fe.set_quadrature_rule(qr);
+  // Define a finite element space on current mesh
+  FE_Space fe_space(mesh, quad_rule);
 
   // For each cell, r:
   for (Index r=0; r<mesh.get_ncel(); ++r)
     {
       std::cout << "Cell: r=" << r << std::endl << std::endl;
 
-      // Compute element-specific data for current cell, including values of basis
-      // functions (and of its derivatives) on quadrature nodes
-      fe.reinit(mesh, r);
+      const FiniteElement & fe = fe_space.get_element(r);
 
-      // Get x-derivatives of all the basis functions of curent element
-      // (a FE_Function is a vector wich stores values at quadrature points)
-      const std::vector<FE_Function>& dx_phi = fe.get_dx_phi();
-      // Get also y-derivatives of basis functions
-      const std::vector<FE_Function>& dy_phi = fe.get_dy_phi();
+      // Get x-derivatives of all the shape functions on curent element.
+      //
+      // The get_dx_phi() member function returns (a const reference
+      // to) a vector of FE_Function objects (one FE_Function for each
+      // dof). The i-th FE_Function represents (the evaluation on
+      // quadrature points of) the i-th shape function of current element.
+      //
+      // In C++11, one can use "auto" instead of "std::vector<FE_Function>"
+      auto & dx_phi = fe.get_dx_phi();
+
+      // Get also y-derivatives of shape functions
+      auto & dy_phi = fe.get_dy_phi();
 
       Index ndofs = fe.get_ndofs();
       // For each degree of freedom, i:

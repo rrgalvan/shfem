@@ -369,7 +369,43 @@ namespace shfem {
 
   };
 
-  ReferenceElement FiniteElement::_reference_element = ReferenceElement();
+
+  /**
+   * @brief Espace of P1 continous finite elements
+   */
+  class P1_FE_Space {
+  public:
+    typedef typename FiniteElement::MESH MESH;
+    typedef typename FiniteElement::QUADRULE QUADRULE;
+
+    P1_FE_Space(): _mesh(NULL), _default_quadrature_rule(NULL) {}
+    P1_FE_Space(const MESH mesh, const QUADRULE quad_rule):
+      _mesh(mesh), _default_quadrature_rule(quad_rule) {}
+
+    /**
+     * Attach (a pointer to) a given mesh to current FE space.
+     * Also adjust consequently he size of finite_elements vector (in
+     * default implementation, it is defined as the number of cells in
+     * the atached mesh)
+     *
+     * @param m Mesh to be attached
+     */
+    void set_mesh( const MESH& m) {
+      _mesh = &m;
+    }
+
+    FiniteElement get_element(Index r) {
+      FiniteElement fe;
+      fe.reinit(_mesh, r);
+      return fe;
+    }
+  }
+private:
+  const MESH* _mesh;
+  const QUADRULE* _default_quadrature_rule;
+}
+
+ReferenceElement FiniteElement::_reference_element = ReferenceElement();
 }
 
 #endif // FINITE_ELEMENT_HPP_
