@@ -46,6 +46,10 @@ PROJECT_NUMBER         =
 
 PROJECT_BRIEF          = "Simple (High-performance) Finte Element Library"
 
+# Addd frontpage (using Mardown syntax!)
+INPUT += README.md
+FILE_PATTERNS += *.md *.markdown
+
 # With the PROJECT_LOGO tag one can specify an logo or icon that is included in
 # the documentation. The maximum height of the logo should not exceed 55 pixels
 # and the maximum width should not exceed 200 pixels. Doxygen will copy the logo
@@ -58,7 +62,7 @@ PROJECT_LOGO           =
 # entered, it will be relative to the location where doxygen was started. If
 # left blank the current directory will be used.
 
-OUTPUT_DIRECTORY       = doc
+OUTPUT_DIRECTORY       =
 
 # If the CREATE_SUBDIRS tag is set to YES, then doxygen will create 4096 sub-
 # directories (in 2 levels) under the output directory of each output format and

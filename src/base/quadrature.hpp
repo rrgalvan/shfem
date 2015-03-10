@@ -38,13 +38,20 @@ namespace shfem {
   template<> FE_Function QuadRule<VerticesQR>::weights =
     {1./6, 1./6, 1./6};
 
+  // Nodes of the quadrature rule (on the reference element)
+  template<> std::vector<Point> QuadRule<MidpointsQR>::nodes =
+    {Point(0.5,0.), Point(0.5,0.5), Point(0.,0.5)};
+  // Weights of the quadrature rule
+  template<> FE_Function QuadRule<MidpointsQR>::weights =
+    {1./6, 1./6, 1./6};
+
   template<int QR> Real
   QuadRule<QR>::integrate_on_ref_element(const FE_Function
 					 & values) const {
-    const int n=3;
+    const int n=size();
     Real sum=0;
     for(int i=0; i<n;i++) {
-      Real weight = this->weights[i];
+      Real weight = weights[i];
       Real value = values[i];
       sum += weight * value;
     }
