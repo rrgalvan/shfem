@@ -43,7 +43,7 @@ namespace shfem {
     {Point(0.5,0.), Point(0.5,0.5), Point(0.,0.5)};
   // Weights of the quadrature rule
   template<> FE_Function QuadRule<MidpointsQR>::weights =
-    {1./6, 1./6, 1./6};
+    {1./0., 1./0., 1./0.}; // Mirar los valores adecuados
 
   template<int QR> Real
   QuadRule<QR>::integrate_on_ref_element(const FE_Function
