@@ -306,7 +306,7 @@ namespace shfem {
      *
      * @return Numerical approximation of $\int_{K} f_1\dot f_2$
      */
-    Real integrate(const FE_Function& f1, const FE_Function& f2)
+    Real integrate(const FE_Function& f1, const FE_Function& f2) const
     {
       Real sum = 0.;
       Real abs_det_J = std::abs(det_jacobian_affine_map());
@@ -331,7 +331,7 @@ namespace shfem {
      * @param point Point located in the reference cell
      * @return Point resulting from application of the affine map
      */
-    POINT apply_affine_map(const POINT& point) {
+    POINT apply_affine_map(const POINT& point) const {
       Real referenceX = point.x, referenceY = point.y;
       Real x0 = get_vertex0().x, y0 = get_vertex0().y;
       Real x1 = get_vertex1().x, y1 = get_vertex1().y;
@@ -353,7 +353,7 @@ namespace shfem {
      * @param point Point located in the physical cell
      * @return Point resulting from application of the inverse affine map
      */
-    POINT apply_inv_affine_map(const POINT& point)
+    POINT apply_inv_affine_map(const POINT& point) const
     {
       Real x = point.x, y = point.y;
       Real x0 = get_vertex0().x, y0 = get_vertex0().y;
@@ -370,39 +370,40 @@ namespace shfem {
   };
 
 
-  // /**
-  //  * @brief Espace of P1 continous finite elements
-  //  */
-  // class P1_FE_Space {
-  // public:
-  //   typedef typename FiniteElement::MESH MESH;
-  //   typedef typename FiniteElement::QUADRULE QUADRULE;
+  /**
+   * @brief Espace of P1 continous finite elements
+   */
+  class P1_FE_Space {
+  public:
+    typedef typename FiniteElement::MESH MESH;
+    typedef typename FiniteElement::QUADRULE QUADRULE;
 
-  //   // P1_FE_Space(): _mesh(NULL), _default_quadrature_rule(NULL) {}
-  //   P1_FE_Space(const MESH mesh, const QUADRULE quad_rule):
-  //     _mesh(mesh), _default_quadrature_rule(quad_rule) {}
+    // // P1_FE_Space(): _mesh(NULL), _default_quadrature_rule(NULL) {}
+    P1_FE_Space(MESH mesh, QUADRULE quad_rule):
+      _mesh(mesh), _default_quadrature_rule(quad_rule) {}
 
-  //   /**
-  //    * Attach (a pointer to) a given mesh to current FE space.
-  //    * Also adjust consequently he size of finite_elements vector (in
-  //    * default implementation, it is defined as the number of cells in
-  //    * the atached mesh)
-  //    *
-  //    * @param m Mesh to be attached
-  //    */
-  //   void set_mesh(const MESH& m) const {
-  //     _mesh = m;
-  //   }
+    // /**
+    //  * Attach (a pointer to) a given mesh to current FE space.
+    //  * Also adjust consequently he size of finite_elements vector (in
+    //  * default implementation, it is defined as the number of cells in
+    //  * the atached mesh)
+    //  *
+    //  * @param m Mesh to be attached
+    //  */
+    // void set_mesh(MESH& m) {
+    //   _mesh = m;
+    // }
 
-  //   FiniteElement get_element(Index r) {
-  //     FiniteElement fe;
-  //     fe.reinit(_mesh, r);
-  //     return fe;
-  //   }
-  // private:
-  //   const MESH& _mesh;
-  //   const QUADRULE& _default_quadrature_rule;
-  // };
+    FiniteElement const get_element(Index r) const {
+      FiniteElement fe;
+      fe.reinit(_mesh, r);
+      // WARNING! USE MOVE SEMANTICS.
+      return fe;
+    }
+  private:
+    MESH _mesh;
+    QUADRULE _default_quadrature_rule;
+  };
 
   ReferenceElement FiniteElement::_reference_element = ReferenceElement();
 }

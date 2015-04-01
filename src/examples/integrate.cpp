@@ -17,6 +17,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+#include <chrono>  // std time handling (C++11)
 #include <shfem.hpp>
 
 using namespace shfem;
@@ -36,50 +37,63 @@ int main()
   VerticesQuadRule quad_rule;
 
   // Define a finite element space on current mesh
-  FE_Space fe_space(mesh, quad_rule);
+  P1_FE_Space fe_space(mesh, quad_rule);
 
-  // For each cell, r:
-  for (Index r=0; r<mesh.get_ncel(); ++r)
-    {
-      std::cout << "Cell: r=" << r << std::endl << std::endl;
+  // Start chronometer
+  auto start = std::chrono::high_resolution_clock::now();
 
-      const FiniteElement & fe = fe_space.get_element(r);
+  // Repeat several times
+  for (int num=0; num<20; ++num) {
 
-      // Get x-derivatives of all the shape functions on curent element.
-      //
-      // The get_dx_phi() member function returns (a const reference
-      // to) a vector of FE_Function objects (one FE_Function for each
-      // dof). The i-th FE_Function represents (the evaluation on
-      // quadrature points of) the i-th shape function of current element.
-      //
-      // In C++11, one can use "auto" instead of "std::vector<FE_Function>"
-      auto & dx_phi = fe.get_dx_phi();
+    // For each cell, r:
+    for (Index r=0; r<mesh.get_ncel(); ++r)
+      {
+	std::cout << "Cell: r=" << r << std::endl << std::endl;
 
-      // Get also y-derivatives of shape functions
-      auto & dy_phi = fe.get_dy_phi();
+	const FiniteElement & fe = fe_space.get_element(r);
 
-      Index ndofs = fe.get_ndofs();
-      // For each degree of freedom, i:
-      for (Index i = 0; i < ndofs; ++i)
-	{
-	  // For each degree of freedom, j:
-	  for (Index j = 0; j < ndofs; ++j)
-	    {
-	      // Compute integral of product of x-derivatives
-	      Real Kx_ij = fe.integrate(dx_phi[i], dx_phi[j]);
-	      std::cout << "Kx[" << i << "][" << j << "]=" << Kx_ij << std::endl;
+	// Get x-derivatives of all the shape functions on curent element.
+	//
+	// The get_dx_phi() member function returns (a const reference
+	// to) a vector of FE_Function objects (one FE_Function for each
+	// dof). The i-th FE_Function represents (the evaluation on
+	// quadrature points of) the i-th shape function of current element.
+	//
+	// In C++11, one can use "auto" instead of "std::vector<FE_Function>"
+	auto & dx_phi = fe.get_dx_phi();
 
-	      // Compute integral of product of y-derivatives
-	      Real Ky_ij = fe.integrate(dy_phi[i], dy_phi[j]);
-	      std::cout << "Ky[" << i << "][" << j << "]=" << Ky_ij << std::endl;
+	// Get also y-derivatives of shape functions
+	auto & dy_phi = fe.get_dy_phi();
 
-	      // Compute integral on element r of gradient(phi_i)*gradient(phi_j),
-	      // i.e. dx(phi_i)*dx(phi_j) + dy(phi_i)*dy(phi_j)
-	      Real K_ij = Kx_ij + Ky_ij;
-	      std::cout << "K[" << i << "][" << j << "]=" << K_ij << std::endl;
+	Index ndofs = fe.get_ndofs();
 
-	      std::cout << std::endl;
-	    }
-	}
-    }
+	// For each degree of freedom, i:
+	for (Index i = 0; i < ndofs; ++i)
+	  {
+	    // For each degree of freedom, j:
+	    for (Index j = 0; j < ndofs; ++j)
+	      {
+		// Compute integral of product of x-derivatives
+		Real Kx_ij = fe.integrate(dx_phi[i], dx_phi[j]);
+		std::cout << "Kx[" << i << "][" << j << "]=" << Kx_ij << std::endl;
+
+		// Compute integral of product of y-derivatives
+		Real Ky_ij = fe.integrate(dy_phi[i], dy_phi[j]);
+		std::cout << "Ky[" << i << "][" << j << "]=" << Ky_ij << std::endl;
+
+		// Compute integral on element r of gradient(phi_i)*gradient(phi_j),
+		// i.e. dx(phi_i)*dx(phi_j) + dy(phi_i)*dy(phi_j)
+		Real K_ij = Kx_ij + Ky_ij;
+		std::cout << "K[" << i << "][" << j << "]=" << K_ij << std::endl;
+
+		std::cout << std::endl;
+	      }
+	  }
+      }
+  }
+  // Store final time and print elapsed time
+  auto end = std::chrono::high_resolution_clock::now();
+  std::cout << "Elapsed time: " <<
+    std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count() <<
+    " miliseconds" << std::endl;
 }

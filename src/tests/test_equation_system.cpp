@@ -64,6 +64,7 @@ BOOST_AUTO_TEST_CASE(StiffnessMatrixTest)
       // Check that all matrices match the tarjet matrix
       BOOST_CHECK(K_r == tarjet_matrix);
 
+
       fe.assemble_matrix(K_r, K);
     }
 }
