@@ -28,6 +28,9 @@ BOOST_AUTO_TEST_CASE(StiffnessMatrixTest)
   VerticesQuadRule qr;
   fe.set_quadrature_rule(qr);
 
+  // Define global matrix
+  MatrixXf K(fe.get_ndofs(), fe.get_ndofs());
+
   // For each cell, r:
   for (Index r=0; r<mesh.get_ncel(); ++r)
     {
