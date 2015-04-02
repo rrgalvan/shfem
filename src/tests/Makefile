@@ -8,7 +8,7 @@ INC = -I$(SHFEM_SRCDIR) -I$(EIGEN_DIR)
 
 BOOST_UNIT_TEST_LIB = -lboost_unit_test_framework
 
-TARGET = test_read_msh test_finite_element test_equation_system
+TARGET = test_read_msh test_finite_element #test_equation_system
 
 all: $(TARGET)
 

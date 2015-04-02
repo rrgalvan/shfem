@@ -25,7 +25,7 @@
 
 namespace shfem {
 
-  using FUNCTION_R2 = Real(*)(Real,Real); // C++11 syntax
+  using FUNCTION_R2R1 = Real(*)(Real,Real); // Function: R^2->R (C++11 syntax)
 
   struct ReferenceElement
   {
@@ -43,9 +43,9 @@ namespace shfem {
     static Real dy_phi_1(Real x, Real y) {return 0;}
     static Real dy_phi_2(Real x, Real y) {return 1;}
 
-    const std::vector<FUNCTION_R2> basis_functions;
-    const std::vector<FUNCTION_R2> dx_phi;
-    const std::vector<FUNCTION_R2> dy_phi;
+    const std::vector<FUNCTION_R2R1> basis_functions;
+    const std::vector<FUNCTION_R2R1> dx_phi;
+    const std::vector<FUNCTION_R2R1> dy_phi;
 
     ReferenceElement() :
       nodes({POINT(0.,0.), POINT(1.,0.), POINT(0.,1.)}),
@@ -132,15 +132,14 @@ namespace shfem {
       for(Index i=0; i<ndofs; ++i)
 	{
 	  // std::cout << "### idof=" << i << std::endl;
-	  // Define i-th basis functions
 	  Index nb_quad_nodes = _quadrature_rule->size();
 	  _phi[i].resize(nb_quad_nodes);
 	  _dx_phi[i].resize(nb_quad_nodes);
 	  _dy_phi[i].resize(nb_quad_nodes);
 	  // Define i-th basis function (on the reference-element)
-	  FUNCTION_R2 hat_phi_i = _reference_element.basis_functions[i];
-	  FUNCTION_R2 dx_hat_phi_i = _reference_element.dx_phi[i];
-	  FUNCTION_R2 dy_hat_phi_i = _reference_element.dy_phi[i];
+	  FUNCTION_R2R1 hat_phi_i = _reference_element.basis_functions[i];
+	  FUNCTION_R2R1 dx_hat_phi_i = _reference_element.dx_phi[i];
+	  FUNCTION_R2R1 dy_hat_phi_i = _reference_element.dy_phi[i];
 	  // Loop on quadrature nodes
 	  for(Index j=0; j<nb_quad_nodes; ++j)
 	    {
@@ -394,7 +393,7 @@ namespace shfem {
     //   _mesh = m;
     // }
 
-    FiniteElement const get_element(Index r) const {
+    const FiniteElement get_element(Index r) const {
       FiniteElement fe;
       fe.reinit(_mesh, r);
       // WARNING! USE MOVE SEMANTICS.
