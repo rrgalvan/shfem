@@ -39,6 +39,7 @@ int main()
   P1_FE_Space fe_space(mesh, quad_rule);
 
   // Start chronometer
+  std::cout << "Running numerical test... ";
   auto start = std::chrono::high_resolution_clock::now();
 
   // Repeat several times
