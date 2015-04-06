@@ -72,6 +72,7 @@ namespace shfem {
    * information about vertices of a 2d trangle
    */
   struct Triangle {
+    enum {NVER=3};
     Triangle() {}
     Triangle(Index i0, Index i1, Index i2): idv0(i0), idv1(i1), idv2(i2) {}
     // Global index of vertex 0
@@ -80,6 +81,7 @@ namespace shfem {
     Index idv1;
     // Global index of vertex 2
     Index idv2;
+    Index get_nver() { return NVER; }
   };
 
   /**

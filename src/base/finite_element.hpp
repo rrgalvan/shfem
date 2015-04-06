@@ -365,18 +365,6 @@ namespace shfem {
       return POINT(referenceX, referenceY);
     }
 
-    // Assemble local matrix in global matrix
-    template <Matrix> void assemble_matrix() (const Matrix& Mlocal, Matrix& M) const {
-      Index ndofs = fe.get_ndofs();
-      for (Index i = 0; i < ndofs; ++i)
-	{
-	  for (Index j = 0; j < ndofs; ++j)
-	    {
-
-	    }
-	}
-    }
-
   };
 
 
@@ -384,11 +372,6 @@ namespace shfem {
    * @brief Espace of P1 continous finite elements
    */
   class P1_FE_Space {
-  private:
-    // We do not need storing pointers or refferences because we
-    // assume that MESH and QUADRULE uses C++11 move semantics.
-    MESH _mesh;
-    QUADRULE _default_quadrature_rule;
   public:
     typedef typename FiniteElement::MESH MESH;
     typedef typename FiniteElement::QUADRULE QUADRULE;
@@ -411,6 +394,38 @@ namespace shfem {
       return _mesh.get_nver(); // P1 dofs match mesh vertices
     }
 
+    // Assemble local matrix "Mlocal" in global matrix "M"
+    template <class Matrix> void assemble_matrix(const Matrix& Mlocal, Matrix& M) const
+    {
+      // For each cell, r:
+      for (Index r=0; r<_mesh.get_ncel(); ++r) {
+	//,--------------------------------------------------
+	//| Compute global index and coordinates for vertices
+	//`--------------------------------------------------
+	auto _cell = _mesh.get_cell(r);
+	Index idv0 = _cell.idv0; // Global index for vertex 0
+	Index idv1 = _cell.idv1; // Global index for vertex 1
+	Index idv2 = _cell.idv2; // Global index for vertex 2
+	const Index index_map[3] = {idv0, idv1, idv2};
+	const Index ndofs = _cell.get_nver();
+	assert(ndofs==3);
+	for (Index i = 0; i < ndofs; ++i)
+	  {
+	    for (Index j = 0; j < ndofs; ++j)
+	      {
+		// Here we are assuming that class Matrix implements
+		// operator()(int i,int j) for accessing to element (i,j)
+		M(index_map[i], index_map[j]) += Mlocal(i,j);
+	      }
+	  }
+      }
+    }
+
+  private:
+    // We do not need storing pointers or refferences because we
+    // assume that MESH and QUADRULE uses C++11 move semantics.
+    MESH _mesh;
+    QUADRULE _default_quadrature_rule;
   };
 
   //

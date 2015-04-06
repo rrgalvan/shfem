@@ -21,22 +21,21 @@ BOOST_AUTO_TEST_CASE(StiffnessMatrixTest)
     std::cerr << "Error reading mesh file" << std::endl;
     exit(1); }
 
-  // Define generic finite element
-  FiniteElement fe;
+  // Define quadrature rule with nodes located at vertices of the reference triangle
+  VerticesQuadRule quad_rule;
 
-  // Use quadrature rule with nodes located at vertices of the reference triangle
-  VerticesQuadRule qr;
-  fe.set_quadrature_rule(qr);
+  // Define a finite element space on current mesh
+  P1_FE_Space fe_space(mesh, quad_rule);
 
   // Define global matrix
-  MatrixXf K(fe.get_ndofs(), fe.get_ndofs());
+  int N = fe_space.get_ndofs();
+  BOOST_CHECK(N == 9);  // Number of DOFs in current mesh
+  MatrixXf K(N, N);
 
   // For each cell, r:
   for (Index r=0; r<mesh.get_ncel(); ++r)
     {
-      // Compute element-specific data for current cell, including values of basis
-      // functions (and of its derivatives) on quadrature nodes
-      fe.reinit(mesh, r);
+      const FiniteElement & fe = fe_space.get_element(r);
 
       // Get x-derivatives of all the basis functions of curent element
       // (a FE_Function is a vector wich stores values at quadrature points)
@@ -67,6 +66,7 @@ BOOST_AUTO_TEST_CASE(StiffnessMatrixTest)
       // Check that all matrices match the tarjet matrix
       BOOST_CHECK(K_r == tarjet_matrix);
 
-      fe.assemble_matrix(K_r, K);
+      // Add local matrix K_r into global matrix K
+      fe_space.assemble_matrix(K_r, K);
     }
 }
