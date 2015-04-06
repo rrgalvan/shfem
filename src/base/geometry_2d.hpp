@@ -116,6 +116,13 @@ namespace shfem {
     std::vector<Point> vertices;
     std::vector<CELL> cells;
   public:
+    TriangleMesh() {}
+    TriangleMesh(TriangleMesh&& mesh):
+      vertices(mesh.vertices), cells(mesh.cells) {}
+    TriangleMesh(const TriangleMesh& mesh):
+      vertices(mesh.vertices), cells(mesh.cells) {}
+    ~TriangleMesh() {}
+
     /// @brief Read number of vertices in current mesh
     /// @return number of vertices
     Index get_nver() const { return vertices.size(); }

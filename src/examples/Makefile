@@ -4,7 +4,7 @@ GCFLAGS =-O3 -Wall -std=c++11 #-fopenmp -fPIC -shared
 
 SHFEM_SRCDIR=..
 
-TARGET = read_msh integrate
+TARGET = read_msh integrate speedup-test
 
 all: $(TARGET)
 

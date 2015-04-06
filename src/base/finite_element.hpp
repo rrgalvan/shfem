@@ -23,6 +23,8 @@
 #include "geometry_2d.hpp"
 #include "quadrature.hpp"
 
+#include <cassert> // For assert()
+
 namespace shfem {
 
   using FUNCTION_R2R1 = Real(*)(Real,Real); // Function: R^2->R (C++11 syntax)

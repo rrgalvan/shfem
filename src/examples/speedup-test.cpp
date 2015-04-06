@@ -39,59 +39,50 @@ int main()
   P1_FE_Space fe_space(mesh, quad_rule);
 
   // Start chronometer
+  std::cout << "Running numerical test... ";
   auto start = std::chrono::high_resolution_clock::now();
 
   // Repeat several times
-  for (int num=0; num<20; ++num) {
+  int Nrepeat = 5000;
+  for (int num=0; num<Nrepeat; ++num)
+    {
+      // For each cell, r:
+      for (Index r=0; r<mesh.get_ncel(); ++r)
+	{
+	  // In C++11, one can use "auto" instead of "FiniteElement"
 
-    // For each cell, r:
-    for (Index r=0; r<mesh.get_ncel(); ++r)
-      {
-	std::cout << "Cell: r=" << r << std::endl << std::endl;
+	  auto fe = fe_space.get_element(r); // Build a finite element on cell r
 
-	// In C++11, one can use "auto" instead of "FiniteElement"
-	auto fe = fe_space.get_element(r); // Build a finite element on cell r
+	  // Get x-derivatives of all the shape functions on curent element.
+	  //
+	  // The get_dx_phi() member function returns (a const reference
+	  // to) a vector of FE_Function objects (one FE_Function for each
+	  // dof). The i-th FE_Function represents (the evaluation on
+	  // quadrature points of) the i-th shape function of current element.
 
-	// Get x-derivatives of all the shape functions on curent element.
-	//
-	// The get_dx_phi() member function returns (a const reference
-	// to) a vector of FE_Function objects (one FE_Function for each
-	// dof). The i-th FE_Function represents (the evaluation on
-	// quadrature points of) the i-th shape function of current element.
-	//
-	// You can use "auto" instead of "std::vector<FE_Function>",
-	// but performance seems better using references ("auto&")
-	auto& dx_phi = fe.get_dx_phi();
+	  // Once again, one can use "auto" instead of  "std::vector<FE_Function>".
+	  // But in this case, it seems better to use a references, "auto&", because
+	  // speed-up is improved (about 30%). Please test it.
+	  auto& dx_phi = fe.get_dx_phi();
+	  auto& dy_phi = fe.get_dy_phi();
 
-	// Get also y-derivatives of shape functions
-	auto& dy_phi = fe.get_dy_phi();
+	  Index ndofs = fe.get_ndofs();
 
-	Index ndofs = fe.get_ndofs();
+	  // For each degree of freedom, i:
+	  for (Index i = 0; i < ndofs; ++i)
+	    {
+	      // For each degree of freedom, j:
+	      for (Index j = 0; j < ndofs; ++j)
+		{
+		  // Compute integral of product of x-derivatives
+		  fe.integrate(dx_phi[i], dx_phi[j]);
+		  // Compute integral of product of y-derivatives
+		  fe.integrate(dy_phi[i], dy_phi[j]);
+		}
+	    }
+	}
+    }
 
-	// For each degree of freedom, i:
-	for (Index i = 0; i < ndofs; ++i)
-	  {
-	    // For each degree of freedom, j:
-	    for (Index j = 0; j < ndofs; ++j)
-	      {
-		// Compute integral of product of x-derivatives
-		Real Kx_ij = fe.integrate(dx_phi[i], dx_phi[j]);
-		std::cout << "Kx[" << i << "][" << j << "]=" << Kx_ij << std::endl;
-
-		// Compute integral of product of y-derivatives
-		Real Ky_ij = fe.integrate(dy_phi[i], dy_phi[j]);
-		std::cout << "Ky[" << i << "][" << j << "]=" << Ky_ij << std::endl;
-
-		// Compute integral on element r of gradient(phi_i)*gradient(phi_j),
-		// i.e. dx(phi_i)*dx(phi_j) + dy(phi_i)*dy(phi_j)
-		Real K_ij = Kx_ij + Ky_ij;
-		std::cout << "K[" << i << "][" << j << "]=" << K_ij << std::endl;
-
-		std::cout << std::endl;
-	      }
-	  }
-      }
-  }
   // Store final time and print elapsed time
   auto end = std::chrono::high_resolution_clock::now();
   std::cout << "Elapsed time: " <<
