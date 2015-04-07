@@ -41,7 +41,7 @@ int main()
   // Start chronometer
   auto start = std::chrono::high_resolution_clock::now();
 
-  // Repeat several times
+  // Repeat several times (for increase computation time)
   for (int num=0; num<20; ++num) {
 
     // For each cell, r:
@@ -92,6 +92,7 @@ int main()
 	  }
       }
   }
+
   // Store final time and print elapsed time
   auto end = std::chrono::high_resolution_clock::now();
   std::cout << "Elapsed time: " <<
