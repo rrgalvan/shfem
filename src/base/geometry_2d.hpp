@@ -48,28 +48,13 @@ namespace shfem {
   }
 
 
-  // /**
-  //  * @brief Topological information for a 2d triangle.
-  //  *
-  //  * Class wich stores three indices corresponding to the vertices
-  //  * of a 2d tirnagle
-  //  */
-  // struct Triangle {
-  //   Triangle() {}
-  //   Triangle(Index i1, Index i2, Index i3): idv1(i1), idv2(i2), idv3(i3) {}
-  //   // Global index of vertex 1
-  //   Index idv1;
-  //   // Global index of vertex 2
-  //   Index idv2;
-  //   // Global index of vertex 3
-  //   Index idv3;
-  // };
-
   /**
-   * @brief Topological information for a 2d triangle.
+   * @brief Topological information for a triangle.
    *
-   * Class wich stores three indices corresponding to the global
-   * information about vertices of a 2d trangle
+   * Class wich stores three indices, corresponding to the global
+   * information (global mesh indices) which identify the vertices of
+   * a triangle contained in a mesh. Note that no geometric inormation
+   * (coordinates of vercites) is stored by this class.
    */
   struct Triangle {
     enum {NVER=3};
@@ -87,9 +72,9 @@ namespace shfem {
   /**
    * @brief Geometric information for a topological object
    *
-   * Class wich stores referencies to three points, storing the
-   * coordinates of vertices of topological object (for instance, a
-   * triangle)
+   * This class stores referencies to three points. Each point is an
+   * object storing the coordinates of vertices of geometric object
+   * (for instance, a triangle)
    */
   struct TriangleGeometry {
     const Point& vertex0;
