@@ -23,9 +23,11 @@
 #include "geometry_2d.hpp"
 #include "quadrature.hpp"
 
+#include <cassert> // For assert()
+
 namespace shfem {
 
-  using FUNCTION_R2 = Real(*)(Real,Real); // C++11 syntax
+  using FUNCTION_R2R1 = Real(*)(Real,Real); // Function: R^2->R (C++11 syntax)
 
   struct ReferenceElement
   {
@@ -43,9 +45,9 @@ namespace shfem {
     static Real dy_phi_1(Real x, Real y) {return 0;}
     static Real dy_phi_2(Real x, Real y) {return 1;}
 
-    const std::vector<FUNCTION_R2> basis_functions;
-    const std::vector<FUNCTION_R2> dx_phi;
-    const std::vector<FUNCTION_R2> dy_phi;
+    const std::vector<FUNCTION_R2R1> basis_functions;
+    const std::vector<FUNCTION_R2R1> dx_phi;
+    const std::vector<FUNCTION_R2R1> dy_phi;
 
     ReferenceElement() :
       nodes({POINT(0.,0.), POINT(1.,0.), POINT(0.,1.)}),
@@ -132,15 +134,14 @@ namespace shfem {
       for(Index i=0; i<ndofs; ++i)
 	{
 	  // std::cout << "### idof=" << i << std::endl;
-	  // Define i-th basis functions
 	  Index nb_quad_nodes = _quadrature_rule->size();
 	  _phi[i].resize(nb_quad_nodes);
 	  _dx_phi[i].resize(nb_quad_nodes);
 	  _dy_phi[i].resize(nb_quad_nodes);
 	  // Define i-th basis function (on the reference-element)
-	  FUNCTION_R2 hat_phi_i = _reference_element.basis_functions[i];
-	  FUNCTION_R2 dx_hat_phi_i = _reference_element.dx_phi[i];
-	  FUNCTION_R2 dy_hat_phi_i = _reference_element.dy_phi[i];
+	  FUNCTION_R2R1 hat_phi_i = _reference_element.basis_functions[i];
+	  FUNCTION_R2R1 dx_hat_phi_i = _reference_element.dx_phi[i];
+	  FUNCTION_R2R1 dy_hat_phi_i = _reference_element.dy_phi[i];
 	  // Loop on quadrature nodes
 	  for(Index j=0; j<nb_quad_nodes; ++j)
 	    {
@@ -306,7 +307,7 @@ namespace shfem {
      *
      * @return Numerical approximation of $\int_{K} f_1\dot f_2$
      */
-    Real integrate(const FE_Function& f1, const FE_Function& f2)
+    Real integrate(const FE_Function& f1, const FE_Function& f2) const
     {
       Real sum = 0.;
       Real abs_det_J = std::abs(det_jacobian_affine_map());
@@ -331,7 +332,7 @@ namespace shfem {
      * @param point Point located in the reference cell
      * @return Point resulting from application of the affine map
      */
-    POINT apply_affine_map(const POINT& point) {
+    POINT apply_affine_map(const POINT& point) const {
       Real referenceX = point.x, referenceY = point.y;
       Real x0 = get_vertex0().x, y0 = get_vertex0().y;
       Real x1 = get_vertex1().x, y1 = get_vertex1().y;
@@ -353,7 +354,7 @@ namespace shfem {
      * @param point Point located in the physical cell
      * @return Point resulting from application of the inverse affine map
      */
-    POINT apply_inv_affine_map(const POINT& point)
+    POINT apply_inv_affine_map(const POINT& point) const
     {
       Real x = point.x, y = point.y;
       Real x0 = get_vertex0().x, y0 = get_vertex0().y;
@@ -366,44 +367,72 @@ namespace shfem {
       return POINT(referenceX, referenceY);
     }
 
-
   };
 
 
-  // /**
-  //  * @brief Espace of P1 continous finite elements
-  //  */
-  // class P1_FE_Space {
-  // public:
-  //   typedef typename FiniteElement::MESH MESH;
-  //   typedef typename FiniteElement::QUADRULE QUADRULE;
+  /**
+   * @brief Espace of P1 continous finite elements
+   */
+  class P1_FE_Space {
+  public:
+    typedef typename FiniteElement::MESH MESH;
+    typedef typename FiniteElement::QUADRULE QUADRULE;
 
-  //   // P1_FE_Space(): _mesh(NULL), _default_quadrature_rule(NULL) {}
-  //   P1_FE_Space(const MESH mesh, const QUADRULE quad_rule):
-  //     _mesh(mesh), _default_quadrature_rule(quad_rule) {}
+    P1_FE_Space(MESH mesh, QUADRULE quad_rule):
+      _mesh(mesh), _default_quadrature_rule(quad_rule) {}
 
-  //   /**
-  //    * Attach (a pointer to) a given mesh to current FE space.
-  //    * Also adjust consequently he size of finite_elements vector (in
-  //    * default implementation, it is defined as the number of cells in
-  //    * the atached mesh)
-  //    *
-  //    * @param m Mesh to be attached
-  //    */
-  //   void set_mesh(const MESH& m) const {
-  //     _mesh = m;
-  //   }
+    const FiniteElement get_element(Index r) const {
+      FiniteElement fe;
+      fe.reinit(_mesh, r);
+      // WARNING! USE MOVE SEMANTICS.
+      return fe;
+    }
 
-  //   FiniteElement get_element(Index r) {
-  //     FiniteElement fe;
-  //     fe.reinit(_mesh, r);
-  //     return fe;
-  //   }
-  // private:
-  //   const MESH& _mesh;
-  //   const QUADRULE& _default_quadrature_rule;
-  // };
+    /**
+     * @brief Get number of degrees of freedom in current space
+     * @return Number of degrees of freedom
+     */
+    Index get_ndofs() const {
+      return _mesh.get_nver(); // P1 dofs match mesh vertices
+    }
 
+    // Assemble local matrix "Mlocal" in global matrix "M"
+    template <class Matrix> void assemble_matrix(const Matrix& Mlocal, Matrix& M) const
+    {
+      // For each cell, r:
+      for (Index r=0; r<_mesh.get_ncel(); ++r) {
+	//,--------------------------------------------------
+	//| Compute global index and coordinates for vertices
+	//`--------------------------------------------------
+	auto _cell = _mesh.get_cell(r);
+	Index idv0 = _cell.idv0; // Global index for vertex 0
+	Index idv1 = _cell.idv1; // Global index for vertex 1
+	Index idv2 = _cell.idv2; // Global index for vertex 2
+	const Index index_map[3] = {idv0, idv1, idv2};
+	const Index ndofs = _cell.get_nver();
+	assert(ndofs==3);
+	for (Index i = 0; i < ndofs; ++i)
+	  {
+	    for (Index j = 0; j < ndofs; ++j)
+	      {
+		// Here we are assuming that class Matrix implements
+		// operator()(int i,int j) for accessing to element (i,j)
+		M(index_map[i], index_map[j]) += Mlocal(i,j);
+	      }
+	  }
+      }
+    }
+
+  private:
+    // We do not need storing pointers or refferences because we
+    // assume that MESH and QUADRULE uses C++11 move semantics.
+    MESH _mesh;
+    QUADRULE _default_quadrature_rule;
+  };
+
+  //
+  // Define static member FiniteElement::_reference_element
+  //
   ReferenceElement FiniteElement::_reference_element = ReferenceElement();
 }
 
