@@ -92,6 +92,11 @@ namespace shfem {
   };
 
   /**
+   * @brief Information about boundary in which are located mesh entities (points, etc)
+   */
+  typedef std::vector<Index> BoundaryInfo;
+
+  /**
    * @brief Mesh composed by 2d triangles
    */
   class TriangleMesh: public BaseMesh {
@@ -100,12 +105,13 @@ namespace shfem {
   private:
     std::vector<Point> vertices;
     std::vector<CELL> cells;
+    BoundaryInfo node_label; // Store information about the boundary where a node is located
   public:
     TriangleMesh() {}
     TriangleMesh(TriangleMesh&& mesh):
-      vertices(mesh.vertices), cells(mesh.cells) {}
+      vertices(mesh.vertices), cells(mesh.cells), node_label(mesh.node_label) {}
     TriangleMesh(const TriangleMesh& mesh):
-      vertices(mesh.vertices), cells(mesh.cells) {}
+      vertices(mesh.vertices), cells(mesh.cells), node_label(mesh.node_label) {}
     ~TriangleMesh() {}
 
     /// @brief Read number of vertices in current mesh
@@ -117,12 +123,19 @@ namespace shfem {
     Index get_ncel() const { return cells.size(); }
 
     /// @brief Get a concrete cell contained in current mesh
+    /// @param i Index of a cell
     /// @return (Reference to) a cell
     const CELL& get_cell(Index i) const { return cells[i];}
 
     /// @brief Get a concrete vertex contained in current mesh
+    /// @param i Index of a vertex
     /// @return (Reference to) a Point
     const Point& get_vertex(Index i) const { return vertices[i];}
+
+    /// @brief Get the index of the boundary where a node is located
+    /// @param i Index of a node
+    /// @return Boundary label
+    Index get_label(Index i) const { return node_label[i];}
 
     /// @brief Read mesh from a medit .msh file (e.g. wrote by FreeFem++)
     /// @param filename Name of a file containing the mesh
@@ -164,12 +177,15 @@ namespace shfem {
     meshfile >> nver >> ncel >> nedg;
     this->vertices = std::vector<Point>(nver);
     this->cells = std::vector<CELL>(ncel);
+    this->node_label = std::vector<Index>(nver);
 
     for(int i=0; i<nver; i++) {
       Real x, y, label;
       meshfile >> x >> y >> label;
       Point p(x, y);
       vertices[i]=p;
+
+      node_label[i] = label;
     }
 
     for(int i=0; i<ncel; i++) {

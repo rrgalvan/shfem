@@ -1,0 +1,22 @@
+// mesh Th=square(2,2);
+mesh Th=readmesh("squared-mesh-2x2.msh");
+fespace Vh(Th,P1);
+Vh uh, vh;
+func fRhs=1;
+func fDirichlet=0;
+
+plot(Th);
+
+varf poisson(uh,vh)=
+  int2d(Th)(dx(uh)*dx(vh) + dy(uh)*dy(vh))
+  - int2d(Th)(fRhs*vh)
+  + on(3,uh=fDirichlet);
+
+matrix A=poisson(Vh,Vh);
+real[int] b=poisson(0,Vh);
+
+uh[] = A^-1*b;  // Solve system
+
+cout << "***Matrix:" << endl << A << endl;
+cout << "***rhs:" << endl << b << endl;
+cout << "***solution:" << endl << uh[] << endl;

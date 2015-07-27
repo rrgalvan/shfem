@@ -24,10 +24,13 @@
 #include "quadrature.hpp"
 
 #include <cassert> // For assert()
+#include <map> // For Dirichlet conditions
 
 namespace shfem {
 
   using FUNCTION_R2R1 = Real(*)(Real,Real); // Function: R^2->R (C++11 syntax)
+  using DirichletConditions = std::map<Index, FUNCTION_R2R1>;
+  Real TGV = 1e+30;  // Très grande valeur
 
   struct ReferenceElement
   {
@@ -425,7 +428,7 @@ namespace shfem {
       return _mesh.get_nver(); // P1 dofs match mesh vertices
     }
 
-    // Assemble the local vector "v_local" into global vector "v"
+    /// Assemble the local vector "v_local" into global vector "v"
     template <class Vector> void assemble_vector(const Vector& v_local, Vector& v) const
     {
       // For each cell, r:
@@ -449,7 +452,7 @@ namespace shfem {
       }
     }
 
-    // Assemble the local matrix "M_local" into global matrix "M"
+    /// Assemble the local matrix "M_local" into global matrix "M"
     template <class Matrix> void assemble_matrix(const Matrix& M_local, Matrix& M) const
     {
       // For each cell, r:
@@ -476,6 +479,42 @@ namespace shfem {
       }
     }
 
+    /**
+     * @brief Mount Dirichlet conditions in an equation system
+     * (matrix and rhs vector).
+     *
+     * Dirichlet conditions are defined by the object dirichlet. This
+     * object maps each boundary label to the corresponding function
+     * defined in the corresponding boundary.
+     */
+    template<class Matrix, class Vector>
+    void apply_dirichlet_conditions(const DirichletConditions& dirichlet, Matrix& A, Vector& b)
+    {
+      std::cout << "Applying boundary conditions" << std::endl;
+      std::cout << b;
+      for(Index i=0; i<get_ndofs(); i++) {
+	Index label = _mesh.get_label(i);
+	std::cout << "Index " << i << ", label " << label << std::endl;
+	if(label) { // Assuming boundary label == 0 for interior nodes
+	  for(auto it = dirichlet.begin(); it != dirichlet.end(); ++it)
+	    {
+	      if (it->first == label) {  // Apply boundary condition
+		std::cout << "  ... blocking node " << i << " with boundary condition "
+			  << label << std::endl;
+		// Block i-th row of A and b
+		A(i,i) = TGV; // Huge value
+		auto& P = _mesh.get_vertex(i);
+		auto f = it->second; // Function defining current condition
+		auto value = f(P.x, P.y);
+		b(i)=TGV*value;
+		// Jump to following node
+		break;
+	      }
+	    }
+	}
+      }
+      std::cout << b;
+    }
   private:
     // We do not need storing pointers or refferences because we
     // assume that MESH and QUADRULE use C++11 move semantics.
