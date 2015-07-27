@@ -24,6 +24,11 @@ using namespace shfem;
 #include <Eigen/Dense>
 using namespace Eigen;
 
+Real rhs_function(Real x, Real y) {
+  // Right hand side function
+  return -x*x-y*y;
+}
+
 int main()
 {
   // Try to read mesh contents from a .msh file (for information about the
@@ -45,7 +50,7 @@ int main()
   int N = fe_space.get_ndofs();
   MatrixXf A(N, N);
 
-  // Global finite element rhs vetctor
+  // Global finite element rhs vector
   VectorXf b(N);
 
   // Start chronometer
@@ -102,4 +107,7 @@ int main()
   int elapsed_time =
     std::chrono::duration_cast<std::chrono::milliseconds>( end_matrix - start ).count();
   std::cout << "Matrix assembled. Elapsed time: " << elapsed_time << " miliseconds" << std::endl;
+
+  std::cout << "Resulting matrix:" << std::endl << A << std::endl;
+  std::cout << "Resulting vector:" << std::endl << b << std::endl;
 }

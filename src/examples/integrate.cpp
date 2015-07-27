@@ -41,7 +41,7 @@ int main()
   // Start chronometer
   auto start = std::chrono::high_resolution_clock::now();
 
-  // Repeat several times (for increase computation time)
+  // Repeat several times (to increase computation time)
   for (int num=0; num<20; ++num) {
 
     // For each cell, r:
@@ -55,9 +55,10 @@ int main()
 	// Get x-derivatives of all the shape functions on curent element.
 	//
 	// The get_dx_phi() member function returns (a const reference
-	// to) a vector of FE_Function objects (one FE_Function for each
-	// dof). The i-th FE_Function represents (the evaluation on
-	// quadrature points of) the i-th shape function of current element.
+	// to) a vector containng FE_Functions (one for each dof). A
+	// FE_Function objetct contains the values resulting from the
+	// evaluation of the corresponding shape function on the
+	// quadrature points.
 	//
 	// You can use "auto" instead of "std::vector<FE_Function>",
 	// but performance seems better using references ("auto&")
