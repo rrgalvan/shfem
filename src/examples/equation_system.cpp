@@ -43,7 +43,10 @@ int main()
 
   // Global finite element matrix
   int N = fe_space.get_ndofs();
-  MatrixXf K(N, N);
+  MatrixXf A(N, N);
+
+  // Global finite element rhs vetctor
+  VectorXf b(N);
 
   // Start chronometer
   auto start = std::chrono::high_resolution_clock::now();
@@ -58,29 +61,40 @@ int main()
       // Get also y-derivatives of basis functions
       const std::vector<FE_Function>& dy_phi = fe.get_dy_phi();
 
-
       // Local stiffness matrix
       Index ndofs = fe.get_ndofs();
-      MatrixXf K_r(ndofs,ndofs);
+      MatrixXf A_r(ndofs,ndofs);
 
-      // For each degree of freedoms, i, j:
+      // Local rhs vector
+      VectorXf b_r(ndofs);
+
+      // For each degree of freedom, i
       for (Index i = 0; i < ndofs; ++i)
 	{
+	  // For each degree of freedom, j
 	  for (Index j = 0; j < ndofs; ++j)
 	    {
 	      // Compute integral of product of x-derivatives
-	      Real Kx_ij = fe.integrate(dx_phi[i], dx_phi[j]);
+	      Real Ax_ij = fe.integrate(dx_phi[i], dx_phi[j]);
 
 	      // Compute integral of product of y-derivatives
-	      Real Ky_ij = fe.integrate(dy_phi[i], dy_phi[j]);
+	      Real Ay_ij = fe.integrate(dy_phi[i], dy_phi[j]);
 
-	      // Store result in local matrix
-	      K_r(i,j) = Kx_ij + Ky_ij;
+	      // Store the result in the local matrix
+	      A_r(i,j) = Ax_ij + Ay_ij;
 	    }
+
+	  // Store also the i-th element in the rhs vector
+	  Real rhs_i = fe.integrate(dx_phi[i]);
+	  b_r(i) = rhs_i;
+
 	}
 
-      // Add local matrix K_r into global matrix K
-      fe_space.assemble_matrix(K_r, K);
+      // Add local matrix A_r into global matrix A
+      fe_space.assemble_matrix(A_r, A);
+
+      // Add local vector b_r into global rhs vector b
+      fe_space.assemble_vector(b_r, b);
     }
 
   // Print matrix assembiling time
