@@ -1,5 +1,8 @@
-// mesh Th=square(2,2);
+// int N=20;
+// mesh Th=square(N,N);
+// savemesh(Th,"nombre-malla.msh");
 mesh Th=readmesh("squared-mesh-2x2.msh");
+
 fespace Vh(Th,P1);
 Vh uh, vh;
 func fRhs=1;

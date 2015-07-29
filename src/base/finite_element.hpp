@@ -452,41 +452,68 @@ namespace shfem {
       }
     }
 
-    /// Assemble the local matrix "M_local" into global matrix "M"
-    template <class Matrix> void assemble_matrix(const Matrix& M_local, Matrix& M) const
+    // template <class Matrix> void assemble_matrix(Matrix& M) const
+    // {
+    //   // Local matrix
+    //   Index ndofs = fe.get_ndofs();
+    //   MatrixXf A_r(ndofs,ndofs);
+    //   // For each cell, r:
+    //   for (Index r=0; r<_mesh.get_ncel(); ++r) {
+    // 	//,--------------------------------------------------
+    // 	//| Compute global index and coordinates for vertices
+    // 	//`--------------------------------------------------
+    // 	auto _cell = _mesh.get_cell(r);
+    // 	Index idv0 = _cell.idv0; // Global index for vertex 0
+    // 	Index idv1 = _cell.idv1; // Global index for vertex 1
+    // 	Index idv2 = _cell.idv2; // Global index for vertex 2
+    // 	const Index index_map[3] = {idv0, idv1, idv2};
+    // 	const Index ndofs = _cell.get_nver();
+    // 	assert(ndofs==3); // At least in current implementation
+    // 	for (Index i = 0; i < ndofs; ++i)
+    // 	  {
+    // 	    for (Index j = 0; j < ndofs; ++j)
+    // 	      {
+    // 		// Here we are assuming that class Matrix implements
+    // 		// operator()(int i,int j) for accessing to element (i,j)
+    // 		M(index_map[i], index_map[j]) += M_local(i,j);
+    // 	      }
+    // 	  }
+    //   }
+    // }
+
+
+    /// Assemble the local matrix "M_local" (relative to Cell r) into global matrix "M"
+    template <class Matrix> void add_local_matrix(const Matrix& M_local, Matrix& M, Index r) const
     {
-      // For each cell, r:
-      for (Index r=0; r<_mesh.get_ncel(); ++r) {
-	//,--------------------------------------------------
-	//| Compute global index and coordinates for vertices
-	//`--------------------------------------------------
-	auto _cell = _mesh.get_cell(r);
-	Index idv0 = _cell.idv0; // Global index for vertex 0
-	Index idv1 = _cell.idv1; // Global index for vertex 1
-	Index idv2 = _cell.idv2; // Global index for vertex 2
-	const Index index_map[3] = {idv0, idv1, idv2};
-	const Index ndofs = _cell.get_nver();
-	assert(ndofs==3); // At least in current implementation
-	for (Index i = 0; i < ndofs; ++i)
-	  {
-	    for (Index j = 0; j < ndofs; ++j)
-	      {
-		// Here we are assuming that class Matrix implements
-		// operator()(int i,int j) for accessing to element (i,j)
-		M(index_map[i], index_map[j]) += M_local(i,j);
-	      }
-	  }
-      }
+      //,--------------------------------------------------
+      //| Compute global index and coordinates for vertices
+      //`--------------------------------------------------
+      auto _cell = _mesh.get_cell(r);
+      Index idv0 = _cell.idv0; // Global index for vertex 0
+      Index idv1 = _cell.idv1; // Global index for vertex 1
+      Index idv2 = _cell.idv2; // Global index for vertex 2
+      const Index index_map[3] = {idv0, idv1, idv2};
+      const Index ndofs = _cell.get_nver();
+      assert(ndofs==3); // At least in current implementation
+      for (Index i = 0; i < ndofs; ++i)
+	{
+	  for (Index j = 0; j < ndofs; ++j)
+	    {
+	      // Here we are assuming that class Matrix implements
+	      // operator()(int i,int j) for accessing to element (i,j)
+	      M(index_map[i], index_map[j]) += M_local(i,j);
+	    }
+	}
     }
 
-    /**
-     * @brief Mount Dirichlet conditions in an equation system
-     * (matrix and rhs vector).
-     *
-     * Dirichlet conditions are defined by the object dirichlet. This
-     * object maps each boundary label to the corresponding function
-     * defined in the corresponding boundary.
-     */
+  /**
+   * @brief Mount Dirichlet conditions in an equation system
+   * (matrix and rhs vector).
+   *
+   * Dirichlet conditions are defined by the object dirichlet. This
+   * object maps each boundary label to the corresponding function
+   * defined in the corresponding boundary.
+   */
     template<class Matrix, class Vector>
     void apply_dirichlet_conditions(const DirichletConditions& dirichlet, Matrix& A, Vector& b)
     {

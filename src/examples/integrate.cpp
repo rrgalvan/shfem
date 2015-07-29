@@ -47,7 +47,7 @@ int main()
     // For each cell, r:
     for (Index r=0; r<mesh.get_ncel(); ++r)
       {
-	std::cout << "Cell: r=" << r << std::endl << std::endl;
+	std::cout << "###### Cell: r=" << r << std::endl << std::endl;
 
 	// In C++11, one can use "auto" instead of "FiniteElement"
 	auto fe = fe_space.get_element(r); // Build a finite element on cell r

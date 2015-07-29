@@ -104,10 +104,10 @@ int main()
 	}
 
       // Add local matrix A_r into global matrix A
-      fe_space.assemble_matrix(A_r, A);
+      fe_space.add_local_matrix(A_r, A, r);
 
       // Add local vector b_r into global rhs vector b
-      fe_space.assemble_vector(b_r, b);
+      fe_space.add_local_vector(b_r, b, r);
 
     }
 
