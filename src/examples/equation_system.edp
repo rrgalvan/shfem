@@ -11,15 +11,20 @@ func fDirichlet=0;
 plot(Th);
 
 varf poisson(uh,vh)=
+  // Bilinear form
   int2d(Th)(dx(uh)*dx(vh) + dy(uh)*dy(vh))
-  - int2d(Th)(fRhs*vh)
-  + on(3,uh=fDirichlet);
+  // Linear form (in left hand side of equation)
+  - int2d(Th)(fRhs*vh);
+// + on(3,uh=fDirichlet);
 
 matrix A=poisson(Vh,Vh);
 real[int] b=poisson(0,Vh);
+b=-b; // Correct minus sing (pass to right hand side)
 
 uh[] = A^-1*b;  // Solve system
 
+// Imprimir la matriz. Como es una matriz dispersa, se imprime
+// como una lista  "i j A(i,j)"
 cout << "***Matrix:" << endl << A << endl;
 cout << "***rhs:" << endl << b << endl;
 cout << "***solution:" << endl << uh[] << endl;

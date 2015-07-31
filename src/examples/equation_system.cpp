@@ -117,17 +117,17 @@ int main()
     std::chrono::duration_cast<std::chrono::milliseconds>( end_system_time - start ).count();
   std::cout << "Equations system assembling time: " << elapsed_time << " miliseconds" << std::endl;
 
-  // Apply Diriclet Conditions on matrix and vector
-  DirichletConditions dirichlet;
-  dirichlet[3] = dirichlet_function;  // Condition on boundary 1
-  fe_space.apply_dirichlet_conditions(dirichlet, A, b);
+  // // Apply Diriclet Conditions on matrix and vector
+  // DirichletConditions dirichlet;
+  // dirichlet[3] = dirichlet_function;  // Condition on boundary 1
+  // fe_space.apply_dirichlet_conditions(dirichlet, A, b);
 
-  // Print Dirichlet conditions assembling time
-  auto end_dirichlet_time = std::chrono::high_resolution_clock::now();
-  elapsed_time =
-    std::chrono::duration_cast<std::chrono::milliseconds>( end_dirichlet_time -
-							   end_system_time ).count();
-  std::cout << "Dirichlet conditions assembling time: " << elapsed_time << " miliseconds" << std::endl;
+  // // Print Dirichlet conditions assembling time
+  // auto end_dirichlet_time = std::chrono::high_resolution_clock::now();
+  // elapsed_time =
+  //   std::chrono::duration_cast<std::chrono::milliseconds>( end_dirichlet_time -
+  // 							   end_system_time ).count();
+  // std::cout << "Dirichlet conditions assembling time: " << elapsed_time << " miliseconds" << std::endl;
 
   // Print equations system
   std::cout << "Resulting matrix:" << std::endl << A << std::endl;
