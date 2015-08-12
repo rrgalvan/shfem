@@ -29,7 +29,7 @@ Real rhs_function(Real x, Real y) {
   return -x*x-y*y;
 }
 
-Real dirichlet_function(Real x, Real y) {
+Real homog_dirichlet_function(Real x, Real y) {
   // Homogeneos Dirichlet condition
   return 0.0;
 }
@@ -74,6 +74,24 @@ int main()
       // Get also y-derivatives of basis functions
       const std::vector<FE_Function>& dy_phi = fe.get_dy_phi();
 
+      // BORRAR
+      cout << endl;
+      for(int i=0; i<2; i++) cout << "," << dx_phi[0][i];
+      cout << endl;
+      for(int i=0; i<2; i++) cout << "," << dy_phi[0][i];
+
+      cout << endl;
+      for(int i=0; i<2; i++) cout << "," << dx_phi[1][i];
+      cout << endl;
+      for(int i=0; i<2; i++) cout << "," << dy_phi[1][i];
+
+      cout << endl;
+      for(int i=0; i<2; i++) cout << "," << dx_phi[2][i];
+      cout << endl;
+      for(int i=0; i<2; i++) cout << "," << dy_phi[2][i];
+
+      cout << endl;
+
       // Local stiffness matrix
       Index ndofs = fe.get_ndofs();
       MatrixXf A_r(ndofs,ndofs);
@@ -81,7 +99,7 @@ int main()
       // Local rhs vector
       VectorXf b_r(ndofs);
 
-      // For each degree of freedom, i
+      // For each degree of freedom, ii
       for (Index i = 0; i < ndofs; ++i)
 	{
 	  // For each degree of freedom, j
@@ -117,17 +135,20 @@ int main()
     std::chrono::duration_cast<std::chrono::milliseconds>( end_system_time - start ).count();
   std::cout << "Equations system assembling time: " << elapsed_time << " miliseconds" << std::endl;
 
-  // // Apply Diriclet Conditions on matrix and vector
-  // DirichletConditions dirichlet;
-  // dirichlet[3] = dirichlet_function;  // Condition on boundary 1
-  // fe_space.apply_dirichlet_conditions(dirichlet, A, b);
+  // Apply Diriclet Conditions on matrix and vector
+  DirichletConditions dirichlet;
+  dirichlet[1] = homog_dirichlet_function;  // Condition on boundary 1
+  dirichlet[2] = homog_dirichlet_function;  // Condition on boundary 1
+  dirichlet[3] = homog_dirichlet_function;  // Condition on boundary 1
+  dirichlet[4] = homog_dirichlet_function;  // Condition on boundary 1
+  fe_space.apply_dirichlet_conditions(dirichlet, A, b);
 
-  // // Print Dirichlet conditions assembling time
-  // auto end_dirichlet_time = std::chrono::high_resolution_clock::now();
-  // elapsed_time =
-  //   std::chrono::duration_cast<std::chrono::milliseconds>( end_dirichlet_time -
-  // 							   end_system_time ).count();
-  // std::cout << "Dirichlet conditions assembling time: " << elapsed_time << " miliseconds" << std::endl;
+  // Print Dirichlet conditions assembling time
+  auto end_dirichlet_time = std::chrono::high_resolution_clock::now();
+  elapsed_time =
+    std::chrono::duration_cast<std::chrono::milliseconds>( end_dirichlet_time -
+  							   end_system_time ).count();
+  std::cout << "Dirichlet conditions assembling time: " << elapsed_time << " miliseconds" << std::endl;
 
   // Print equations system
   std::cout << "Resulting matrix:" << std::endl << A << std::endl;

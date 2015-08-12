@@ -46,10 +46,10 @@ BOOST_AUTO_TEST_CASE(StiffnessMatrixTest)
       Index ndofs = fe.get_ndofs();
       // Local stiffness matrix
       MatrixXf K_r(ndofs,ndofs);
-      MatrixXf tarjet_matrix(ndofs, ndofs);
-      tarjet_matrix << 1./4, -1./24, -1./8,
+      MatrixXf target_matrix(ndofs, ndofs);
+      target_matrix << 1./4, -1./24, -1./8,
 	-1./24, 1./24, 0,
-	-1./8,  0,     1./8;
+	-1./8,  0,  1./8;
 
       // For each degree of freedom, i:
       for (Index i = 0; i < ndofs; ++i)
@@ -63,8 +63,8 @@ BOOST_AUTO_TEST_CASE(StiffnessMatrixTest)
 	      K_r(i,j) = Kx_ij + Ky_ij;
 	    }
 	}
-      // Check that all matrices match the tarjet matrix
-      BOOST_CHECK(K_r == tarjet_matrix);
+      // Check that all matrices match the target matrix
+      BOOST_CHECK(K_r == target_matrix);
 
       // Add local matrix K_r into global matrix K
       fe_space.assemble_matrix(K_r, K);
