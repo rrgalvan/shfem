@@ -13,18 +13,22 @@ HOFFELIB=$(HOFFELIB_SRC)/libhoffe.a
 
 SOURCES:= $(wildcard *.f90)
 OBJECTS:=$(SOURCES:.f90=.o)
+EXEC:=$(SOURCES:.f90=)
 
 # Compiling rules
 
-all: mesh1d_example
+#all: mesh1d_example
+all: $(EXEC)
 
 %.o: %.f90
 	$(COMPILE) $<
+%: %.o
+	$(LINK) $<
 
 %: %.o
 	$(LINK) $(OBJECTS) $(HOFFELIB) -o $@
 
 clean:
-	rm -f  *.o *.mod *~
+	rm -f  $(EXEC) *.o *.mod *~
 
 .PHONY: all clean

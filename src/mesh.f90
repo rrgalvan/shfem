@@ -9,7 +9,7 @@ module mesh
   public :: mesh1d, init, ncells, nvertices
 
   !> Data type for 1-d meshes
-  type, public mesh1d
+  type mesh1d
      !> @brief Array which stores the indexes of vertices, for each cell
      !!
      !! Each row, i, stores the global indices of the vertices
@@ -40,7 +40,7 @@ contains
 
     ! Define vertices for each cell
     allocate( Th%vertices(ncells,nvertices_in_each_element) )
-    forall i=1, ncells
+    do i=1, ncells
        Th%vertices(i,:) = [i,i+1]  ! Define vertices in cell i
     end do
 
