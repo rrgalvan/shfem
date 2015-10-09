@@ -10,7 +10,7 @@ OPTIONS=$(OPTIONS_GFORTRAN_DEVEL)
 
 COMPILE=$(FC) $(OPTIONS) -c
 
-SOURCES:=$(wildcard *.f90)
+SOURCES:=nrtypes.f90 $(wildcard *.f90)
 OBJECTS:=$(SOURCES:.f90=.o)
 
 default: libhoffe.a
