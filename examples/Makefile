@@ -11,19 +11,16 @@ HOFFELIB=$(HOFFELIB_SRC)/libhoffe.a
 
 # Definition of object and source files
 
-SOURCES:= $(wildcard *.f90)
+SOURCES:=$(wildcard *.f90)
 OBJECTS:=$(SOURCES:.f90=.o)
 EXEC:=$(SOURCES:.f90=)
 
 # Compiling rules
 
-#all: mesh1d_example
 all: $(EXEC)
 
 %.o: %.f90
 	$(COMPILE) $<
-%: %.o
-	$(LINK) $<
 
 %: %.o
 	$(LINK) $(OBJECTS) $(HOFFELIB) -o $@
