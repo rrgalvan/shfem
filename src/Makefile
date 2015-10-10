@@ -1,4 +1,4 @@
-FC=gfortran
+1FC=gfortran
 
 # Options for gfortran and ifortran compilers (see http://www.fortran90.org/src/faq.html)
 OPTIONS_GFORTRAN_DEVEL=-Wall -Wextra -Wimplicit-interface -Werror -fPIC -fmax-errors=1 -fbacktrace -fbounds-check -fcheck-array-temporaries
@@ -7,10 +7,10 @@ OPTIONS_GFORTRAN_PRODUCTION=-Wall -Wextra -Wimplicit-interface -fPIC -Werror -fm
 OPTIONS_IFORT_PRODUCTION=-warn all -fast
 
 OPTIONS=$(OPTIONS_GFORTRAN_DEVEL)
-
 COMPILE=$(FC) $(OPTIONS) -c
 
-SOURCES:=nrtypes.f90 $(wildcard *.f90)
+SOURCES:=nrtypes.f90 mesh1d.f90 mesh2d.f90 mesh.f90
+
 OBJECTS:=$(SOURCES:.f90=.o)
 
 default: libhoffe.a

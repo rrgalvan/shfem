@@ -1,9 +1,12 @@
-SUBDIRS = src examples #tests
+SUBDIRS:=src examples tests
 
 all: $(SUBDIRS)
 
 $(SUBDIRS):
 	$(MAKE) -C $@
+
+tests: $(SUBDIRS)
+	$(MAKE) -C tests run
 
 clean: $(SUBDIRS)
 	rm -f *~
@@ -11,4 +14,4 @@ clean: $(SUBDIRS)
 		$(MAKE) clean -C $$dir; \
 	done
 
-.PHONY: all clean $(SUBDIRS)
+.PHONY: all clean tests $(SUBDIRS)
