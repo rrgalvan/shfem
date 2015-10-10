@@ -6,7 +6,7 @@ module mesh
   use nrtypes
   implicit none
   private
-  public :: mesh1d, init, ncells, nvertices
+  public :: mesh1d, init, ncells, nvertices, copy_vertices, copy_coordinates
 
   !> Data type for 1-d meshes
   type mesh1d
@@ -68,5 +68,24 @@ contains
     type(mesh1d), intent(in) :: Th !< 1D mesh
     nvertices = Th%nvertices !size(Th%coordinates, 2)
   end function nvertices
+
+  !> Return a copy of the vertices contained in the i-th cell of Th
+  function copy_vertices(Th,i)
+    type(mesh1d), intent(in) :: Th !< 1D mesh
+    integer(long), intent(in) :: i
+    integer(long), parameter :: nvertices_in_each_element = 2 ! Number of vertices / elements
+    integer(long), dimension(nvertices_in_each_element) :: copy_vertices
+    copy_vertices = Th%vertices(:,i)
+  end function copy_vertices
+
+
+    !> Return a copy of the coordinates of the i-th vertex of Th
+  function copy_coordinates(Th,i)
+    type(mesh1d), intent(in) :: Th !< 1D mesh
+    integer(long), intent(in) :: i
+    integer(long), parameter :: dimension_of_affine_space = 1
+    real(dp), dimension(dimension_of_affine_space) :: copy_coordinates
+    copy_coordinates = Th%coordinates(:,i)
+  end function copy_coordinates
 
 end module mesh
