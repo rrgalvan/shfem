@@ -11,7 +11,7 @@ program fruit_driver
   ! Run tests
   call init_fruit
 
-  call test_mesh1d
+  call test_mesh_1d_2d
 
   ! Finalize
   call fruit_summary

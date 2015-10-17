@@ -5,7 +5,7 @@ all: $(SUBDIRS)
 $(SUBDIRS):
 	$(MAKE) -C $@
 
-tests: $(SUBDIRS)
+test: $(SUBDIRS)
 	$(MAKE) -C tests run
 
 clean: $(SUBDIRS)

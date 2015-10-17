@@ -6,14 +6,19 @@ module mesh_test
 
 contains
 
-  ! Simple test to show if mesh1d objects are working
-  subroutine test_mesh1d
+  !!,----------------------------------------------------------------
+  !!| Simple test to show if 1D/2D meshes (mesh1d and mesh2d objects)
+  !!| are working
+  !!`----------------------------------------------------------------
+  subroutine test_mesh_1d_2d
     call test_mesh1d_build
     call test_mesh1d_init
     call test_mesh2d_init_from_file
-  end subroutine test_mesh1d
+  end subroutine test_mesh_1d_2d
 
-  ! Test of (1) manual building of mesh1d (2) functions nvertices, ncells
+  !!,----------------------------------------------------------------------
+  !!| Test of (1) manual building of mesh1d (2) functions nvertices, ncells
+  !!`----------------------------------------------------------------------
   subroutine test_mesh1d_build
     use mesh
 
@@ -43,7 +48,9 @@ contains
     call assert_equals(nvertices(Th), nv)
   end subroutine test_mesh1d_build
 
-  ! Test functions init, get_vertices, get_coordinates
+  !!,---------------------------------------------------
+  !!| Test functions init, get_vertices, get_coordinates
+  !!`---------------------------------------------------
   subroutine test_mesh1d_init
     use mesh
     type(mesh1d) Th
@@ -70,11 +77,13 @@ contains
     end associate
   end subroutine test_mesh1d_init
 
-  ! Test of building of triangle_mesh2d which is stored in a file.
-  !
-  ! That file, which was created using FreeFem++ (in .msh format),
-  ! stores a squared mesh which is composed of 9 vertices and 8
-  ! triangles in the unit square.
+  !!,---------------------------------------------------------------
+  !!| Test of building of triangle_mesh2d which is stored in a file.
+  !!|
+  !!| That file, which was created using FreeFem++ (in .msh format),
+  !!| stores a squared mesh which is composed of 9 vertices and 8
+  !!| triangles in the unit square.
+  !!`---------------------------------------------------------------
   subroutine test_mesh2d_init_from_file
     use mesh, only : triangle_mesh2d, init, ncells, nvertices
     character (len=*), parameter :: file_name = "squared-mesh-2x2.msh"
