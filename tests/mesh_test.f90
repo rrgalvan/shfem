@@ -46,7 +46,6 @@ contains
   ! Test functions init, get_vertices, get_coordinates
   subroutine test_mesh1d_init
     use mesh
-    integer(long), dimension(2) :: v
     type(mesh1d) Th
     integer(long) :: i
     real(dp) :: expected_coordinates(1)
@@ -55,8 +54,9 @@ contains
 
     ! Test access to vertices of each cell
     do i=1, 10
-       v = get_vertices(Th,i)
-       call assert_equals(v, [i, i+1], n=2)
+       associate ( v => get_vertices(Th,i) )
+         call assert_equals(v, [i, i+1], n=2)
+       end associate
     end do
 
     ! Test access to a single coordinate
@@ -70,19 +70,20 @@ contains
     end associate
   end subroutine test_mesh1d_init
 
-  ! Test of building of triangle_mesh2d from a file.
+  ! Test of building of triangle_mesh2d which is stored in a file.
   !
-  ! This file, which was created using FreeFem++, stores a squared mesh
-  ! which is composed of 9 vertices and 8 triangles in the unit square.
+  ! That file, which was created using FreeFem++ (in .msh format),
+  ! stores a squared mesh which is composed of 9 vertices and 8
+  ! triangles in the unit square.
   subroutine test_mesh2d_init_from_file
     use mesh, only : triangle_mesh2d, init, ncells, nvertices
     character (len=*), parameter :: file_name = "squared-mesh-2x2.msh"
     integer(long), parameter, dimension(24) :: expected_vertices &
          = [1, 2, 5, 1, 5, 4, 2, 3, 6, 2, 6, 5, 4, 5, 8, 4, 8, 7, 5, 6, 9, 5, 9, 8]
     real(dp), parameter, dimension(18) :: expected_coordinates &
-         = [0.0_dp, 0.0_dp, 0.5_dp, 0.0_dp, 1.0_dp, 0.0_dp, &
+         = [ 0.0_dp, 0.0_dp, 0.5_dp, 0.0_dp, 1.0_dp, 0.0_dp, &
          0.0_dp, 0.5_dp, 0.5_dp, 0.5_dp, 1.0_dp, 0.5_dp,&
-         0.0_dp, 1.0_dp, 0.5_dp, 1.0_dp, 1.0_dp, 1.0_dp]
+         0.0_dp, 1.0_dp, 0.5_dp, 1.0_dp, 1.0_dp, 1.0_dp ]
 
     type(triangle_mesh2d) :: Th ! Build new mesh
     call init(Th, file_name)
