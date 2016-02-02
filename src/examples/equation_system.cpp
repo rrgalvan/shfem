@@ -19,14 +19,18 @@
 
 #include <chrono>  // std time handling (C++11)
 #include <shfem.hpp>
+#include <cmath>
+
 using namespace shfem;
 
 #include <Eigen/Dense>
-using namespace Eigen;
+// using namespace Eigen;
 
 Real rhs_function(Real x, Real y) {
   // Right hand side function
-  return -x*x-y*y;
+  return 4; // Exact solution: u = 1-x^2-y^2 in Omega=unit_circle
+  // const double PI = 3.1415926535;
+  // return 2*PI*PI*sin(PI*x)*sin(PI*y);
 }
 
 Real homog_dirichlet_function(Real x, Real y) {
@@ -54,10 +58,10 @@ int main()
 
   // Global finite element matrix
   int N = fe_space.get_ndofs();
-  MatrixXf A(N, N);
+  Eigen::MatrixXf A(N, N);
 
   // Global finite element rhs vector
-  VectorXf b(N);
+  Eigen::VectorXf b(N);
 
   // Start chronometer
   auto start = std::chrono::high_resolution_clock::now();
@@ -74,30 +78,30 @@ int main()
       // Get also y-derivatives of basis functions
       const std::vector<FE_Function>& dy_phi = fe.get_dy_phi();
 
-      // BORRAR
-      cout << endl;
-      for(int i=0; i<2; i++) cout << "," << dx_phi[0][i];
-      cout << endl;
-      for(int i=0; i<2; i++) cout << "," << dy_phi[0][i];
+      // // BORRAR
+      // cout << endl;
+      // for(int i=0; i<2; i++) cout << "," << dx_phi[0][i];
+      // cout << endl;
+      // for(int i=0; i<2; i++) cout << "," << dy_phi[0][i];
 
-      cout << endl;
-      for(int i=0; i<2; i++) cout << "," << dx_phi[1][i];
-      cout << endl;
-      for(int i=0; i<2; i++) cout << "," << dy_phi[1][i];
+      // cout << endl;
+      // for(int i=0; i<2; i++) cout << "," << dx_phi[1][i];
+      // cout << endl;
+      // for(int i=0; i<2; i++) cout << "," << dy_phi[1][i];
 
-      cout << endl;
-      for(int i=0; i<2; i++) cout << "," << dx_phi[2][i];
-      cout << endl;
-      for(int i=0; i<2; i++) cout << "," << dy_phi[2][i];
+      // cout << endl;
+      // for(int i=0; i<2; i++) cout << "," << dx_phi[2][i];
+      // cout << endl;
+      // for(int i=0; i<2; i++) cout << "," << dy_phi[2][i];
 
-      cout << endl;
+      // cout << endl;
 
       // Local stiffness matrix
       Index ndofs = fe.get_ndofs();
-      MatrixXf A_r(ndofs,ndofs);
+      Eigen::MatrixXf A_r(ndofs,ndofs);
 
       // Local rhs vector
-      VectorXf b_r(ndofs);
+      Eigen::VectorXf b_r(ndofs);
 
       // For each degree of freedom, ii
       for (Index i = 0; i < ndofs; ++i)
@@ -153,6 +157,6 @@ int main()
   // Print equations system
   std::cout << "Resulting matrix:" << std::endl << A << std::endl;
   std::cout << "Resulting vector:" << std::endl << b << std::endl;
-  VectorXf u =  A.partialPivLu().solve(b);
+  Eigen::VectorXf u =  A.partialPivLu().solve(b);
   std::cout << "Solution: " << u << std::endl;
 }

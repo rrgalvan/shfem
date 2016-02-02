@@ -5,7 +5,8 @@ mesh Th=readmesh("squared-mesh-2x2.msh");
 
 fespace Vh(Th,P1);
 Vh uh, vh;
-func fRhs=1;
+func exactSolution = sin(pi*x)*sin(pi*y);
+func fRhs = 4; //2*pi*pi*sin(pi*x)*sin(pi*y);
 func fDirichlet=0;
 
 plot(Th);
@@ -29,3 +30,8 @@ uh[] = A^-1*b;  // Solve system
 cout << "***Matrix:" << endl << A << endl;
 cout << "***rhs:" << endl << b << endl;
 cout << "***solution:" << endl << uh[] << endl;
+
+Vh ue = exactSolution(x,y);
+cout << "***L2 error:" << sqrt(int2d(Th)(square(uh-ue))) << endl;
+
+plot(uh, fill=true, value=true);
