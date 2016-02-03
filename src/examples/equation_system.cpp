@@ -46,7 +46,7 @@ int main()
   TriangleMesh mesh;
   try {
     // mesh.read_file_msh("circle200.msh");
-    mesh.read_file_msh("square_8.msh"); }
+    mesh.read_file_msh("square_3.msh"); }
   catch (...) {
     std::cerr << "Error reading mesh file" << std::endl;
     exit(1); }
@@ -58,11 +58,15 @@ int main()
   P1_FE_Space fe_space(mesh, quad_rule);
 
   // Global finite element matrix
-  int N = fe_space.get_ndofs();
+  Index N = fe_space.get_ndofs();
   Eigen::MatrixXf A(N, N);
+  for(Index i=0; i<N; i++) for(Index j=0; j<N; j++) A(i,j)=0.;
+  cout << "Previous A: " << A << endl;
 
   // Global finite element rhs vector
   Eigen::VectorXf b(N);
+  for(Index i=0; i<N; i++) b(i)=0.;
+  cout << "Previous b: " << b << endl;
 
   // Start chronometer
   auto start = std::chrono::high_resolution_clock::now();
@@ -72,8 +76,8 @@ int main()
     {
       auto fe = fe_space.get_element(r); // Build a finite element on cell r
 
-      // Get the basis functions of curent element
-      const std::vector<FE_Function>& phi = fe.get_phi();
+      // // Get the basis functions of curent element
+      // const std::vector<FE_Function>& phi = fe.get_phi();
       // Get x-derivatives of all the basis functions of curent element
       const std::vector<FE_Function>& dx_phi = fe.get_dx_phi();
       // Get also y-derivatives of basis functions
@@ -104,6 +108,21 @@ int main()
       // Local rhs vector
       Eigen::VectorXf b_r(ndofs);
 
+      // Sum of f(p_i) where p_i are the three vertices of
+      // the triangle.
+      // [WARNING]
+      /// Only for P1 elements on triangles!!
+      // See [F. J. Sayas, A gentle introduction to the Finite Element Method]
+      // [WARNING]
+      // Assuming quadrature rule on vertices!!
+      Real f_sum = 0;
+      auto qrule = fe.get_quadrature_rule();
+      for(Index r=0; r<3; r++) {
+	const FiniteElement::POINT& P = qrule.nodes[r];
+	f_sum += rhs_function(P.x, P.y);
+	cout << "r=" << r << "f_sum=" << f_sum << endl;
+      }
+
       // For each degree of freedom, ii
       for (Index i = 0; i < ndofs; ++i)
 	{
@@ -121,20 +140,29 @@ int main()
 	    }
 
 	  // Store also the i-th element in the rhs vector
-	  auto qrule = fe.get_quadrature_rule();
-	  FE_Function f(qrule.size()); // FE_Function on quadrature nodes
-	  for(Index r=0; r<qrule.size(); r++) {
-	    const FiniteElement::POINT& P = qrule.nodes[r];
-	    f[i] = rhs_function(P.x, P.y);
-	  }
-	  b_r(i) = fe.integrate(f, phi[i]);
+	  // auto qrule = fe.get_quadrature_rule();
+	  // FE_Function f(qrule.size()); // FE_Function on quadrature nodes
+	  // for(Index r=0; r<qrule.size(); r++) {
+	  //   const FiniteElement::POINT& P = qrule.nodes[r];
+	  //   f[i] = rhs_function(P.x, P.y);
+	  // }
+	  // b_r(i) = fe.integrate(f, phi[i]);
+	  Real det_jacobian = std::abs(fe.det_jacobian_affine_map());
+	  cout << "|det_jacobian|=" << det_jacobian << endl;
+	  b_r(i) = det_jacobian/18. * f_sum;
+	  cout << "b_r(" << i << ")=" << b_r(i) << endl;
 	}
 
       // Add local matrix A_r into global matrix A
       fe_space.add_local_matrix(A_r, A, r);
 
+
+      cout << "Previous rhs: " << b << endl;
+      cout << "Element r=" << r << ", adding to rhs:" << b_r << endl;
       // Add local vector b_r into global rhs vector b
       fe_space.add_local_vector(b_r, b, r);
+
+      cout << "Resulting rhs: " << b << endl;
 
     }
 
@@ -168,7 +196,7 @@ int main()
   // Save solution to file (so that it can be read by external tools
   // like FreeFem++)
   std::ofstream myfile;
-  std::string sol_filename = "sol_square_n=8.txt";
+  std::string sol_filename = "sol_square_n=3.txt";
   myfile.open (sol_filename);
   std::cout << "Writing solution to file: " << sol_filename << endl;
   myfile << u.size() << endl << u;

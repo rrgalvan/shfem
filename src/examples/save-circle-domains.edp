@@ -1,6 +1,9 @@
-int N=16;
-mesh Th=square(N,N);
-string meshFile = "square_" + N + ".msh";
+int N=20;
+real R=1.0;
+border C(t=0,2*pi) { x=R*cos(t); y=R*sin(t); }
+mesh Th=buildmesh(C(N));
+
+string meshFile = "circle_" + N + ".msh";
 savemesh(Th, meshFile);
 plot(Th);
 
