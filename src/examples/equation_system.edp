@@ -1,7 +1,7 @@
 // int N=20;
 // mesh Th=square(N,N);
 // savemesh(Th,"nombre-malla.msh");
-mesh Th=readmesh("squared-mesh-2x2.msh");
+mesh Th=readmesh("square_2.msh");
 
 fespace Vh(Th,P1);
 Vh uh, vh;
@@ -38,15 +38,16 @@ cout << "***L2 error:" << sqrt(int2d(Th)(square(uh-ue))) << endl;
 
 // Read and post-rocess an external solution (e.g. from shfem library)
 Vh uext;
-string solfile="solution.txt";
+string solfile="sol_square_n=2.txt";
 ifstream ii(solfile);
 ii >> uext[];
-cout << "Solution: " << uext[] << endl;
+cout << "FreeFem++ solution: " << uh[] << endl;
+cout << "External solution: " << uext[] << endl;
 cout << "Diference with FreeFem++ solution (L2 norm): " <<
   sqrt(int2d(Th)(square(uh-uext))) << endl;
 
-// Plot it and save to vtk (for further post-processing)
-plot(uext);
+// Plot and save it to vtk (for further post-processing)
+plot(uext, fill=true);
 
 load "iovtk";
 string vtkFile = "solution.vtk";

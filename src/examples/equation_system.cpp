@@ -46,7 +46,7 @@ int main()
   TriangleMesh mesh;
   try {
     // mesh.read_file_msh("circle200.msh");
-    mesh.read_file_msh("squared-mesh-2x2.msh"); }
+    mesh.read_file_msh("square_8.msh"); }
   catch (...) {
     std::cerr << "Error reading mesh file" << std::endl;
     exit(1); }
@@ -168,7 +168,7 @@ int main()
   // Save solution to file (so that it can be read by external tools
   // like FreeFem++)
   std::ofstream myfile;
-  std::string sol_filename = "solution.txt";
+  std::string sol_filename = "sol_square_n=8.txt";
   myfile.open (sol_filename);
   std::cout << "Writing solution to file: " << sol_filename << endl;
   myfile << u.size() << endl << u;

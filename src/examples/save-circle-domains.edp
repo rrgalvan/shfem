@@ -1,0 +1,9 @@
+int N=16;
+mesh Th=square(N,N);
+string meshFile = "square_" + N + ".msh";
+savemesh(Th, meshFile);
+plot(Th);
+
+// load "iovtk";
+// string vtkFile = "solution.vtk";
+// savevtk(vtkFile, Th, uext, dataname="u");
