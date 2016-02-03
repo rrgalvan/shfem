@@ -20,6 +20,7 @@
 #include <chrono>  // std time handling (C++11)
 #include <shfem.hpp>
 #include <cmath>
+#include <fstream> // To save the solution to a file
 
 using namespace shfem;
 
@@ -163,4 +164,14 @@ int main()
   std::cout << "Resulting vector:" << std::endl << b << std::endl;
   Eigen::VectorXf u =  A.partialPivLu().solve(b);
   std::cout << "Solution: " << u << std::endl;
+
+  // Save solution to file (so that it can be read by external tools
+  // like FreeFem++)
+  std::ofstream myfile;
+  std::string sol_filename = "solution.txt";
+  myfile.open (sol_filename);
+  std::cout << "Writing solution to file: " << sol_filename << endl;
+  myfile << u.size() << endl << u;
+  myfile.close();
+  return 0;
 }
