@@ -120,9 +120,13 @@ int main()
 	    }
 
 	  // Store also the i-th element in the rhs vector
-	  Real rhs_i = fe.integrate(phi[i]);
-	  b_r(i) = rhs_i;
-
+	  auto qrule = fe.get_quadrature_rule();
+	  FE_Function f(qrule.size()); // FE_Function on quadrature nodes
+	  for(Index r=0; r<qrule.size(); r++) {
+	    const FiniteElement::POINT& P = qrule.nodes[r];
+	    f[i] = rhs_function(P.x, P.y);
+	  }
+	  b_r(i) = fe.integrate(f, phi[i]);
 	}
 
       // Add local matrix A_r into global matrix A
