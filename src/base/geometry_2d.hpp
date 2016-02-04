@@ -138,7 +138,7 @@ namespace shfem {
 
     /// @brief Read mesh from a medit .msh file (e.g. wrote by FreeFem++)
     /// @param filename Name of a file containing the mesh
-    void read_file_msh(const char* filename);
+    void read_file_msh(std::string filename);
 
     /// @brief Print mesh contents
     void print() const;
@@ -169,7 +169,7 @@ namespace shfem {
    *
    * @param filename
    */
-  void TriangleMesh::read_file_msh(const char* filename) {
+  void TriangleMesh::read_file_msh(std::string filename) {
     std::fstream meshfile(filename);
 
     int nver, ncel, nedg;

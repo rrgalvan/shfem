@@ -1,4 +1,4 @@
-int N=3;
+int N=64;
 mesh Th=square(N,N);
 string meshFile = "square_" + N + ".msh";
 savemesh(Th, meshFile);

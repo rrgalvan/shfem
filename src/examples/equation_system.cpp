@@ -25,13 +25,16 @@
 using namespace shfem;
 
 #include <Eigen/Dense>
-// using namespace Eigen;
+
+#define NINTERVALS 64
 
 Real rhs_function(Real x, Real y) {
   // Right hand side function
-  return 4; // Exact solution: u = 1-x^2-y^2 in Omega=unit_circle
-  // const double PI = 3.1415926535;
-  // return 2*PI*PI*sin(PI*x)*sin(PI*y);
+  // return 4; // Exact solution: u = 1-x^2-y^2 in Omega=unit_circle
+  const double PI = 3.1415926535;
+  cout << "::: x=" << x << ", y=" << y << ", f="
+       << 2*PI*PI*sin(PI*x)*sin(PI*y) << endl;
+  return(2*PI*PI*sin(PI*x)*sin(PI*y));
 }
 
 Real homog_dirichlet_function(Real x, Real y) {
@@ -46,7 +49,8 @@ int main()
   TriangleMesh mesh;
   try {
     // mesh.read_file_msh("circle200.msh");
-    mesh.read_file_msh("square_3.msh"); }
+    std::string mesh_file = "square_" + std::to_string(NINTERVALS) + ".msh";
+    mesh.read_file_msh(mesh_file); }
   catch (...) {
     std::cerr << "Error reading mesh file" << std::endl;
     exit(1); }
@@ -77,7 +81,7 @@ int main()
       auto fe = fe_space.get_element(r); // Build a finite element on cell r
 
       // // Get the basis functions of curent element
-      // const std::vector<FE_Function>& phi = fe.get_phi();
+      const std::vector<FE_Function>& phi = fe.get_phi();
       // Get x-derivatives of all the basis functions of curent element
       const std::vector<FE_Function>& dx_phi = fe.get_dx_phi();
       // Get also y-derivatives of basis functions
@@ -113,15 +117,14 @@ int main()
       // [WARNING]
       /// Only for P1 elements on triangles!!
       // See [F. J. Sayas, A gentle introduction to the Finite Element Method]
-      // [WARNING]
-      // Assuming quadrature rule on vertices!!
-      Real f_sum = 0;
-      auto qrule = fe.get_quadrature_rule();
-      for(Index r=0; r<3; r++) {
-	const FiniteElement::POINT& P = qrule.nodes[r];
-	f_sum += rhs_function(P.x, P.y);
-	cout << "r=" << r << "f_sum=" << f_sum << endl;
-      }
+      // [WARNING]      _cell = &mesh.get_cell(idx_cell);
+      // assert(ndofs == 3);
+      // Real f_sum = 0;
+      // for(Index i=0; i<3; i++) {
+      // 	const FiniteElement::POINT& P = fe.get_vertex(i);
+      // 	f_sum += rhs_function(P.x, P.y);
+      // 	cout << "r=" << r << "f_sum=" << f_sum << endl;
+      // }
 
       // For each degree of freedom, ii
       for (Index i = 0; i < ndofs; ++i)
@@ -140,16 +143,20 @@ int main()
 	    }
 
 	  // Store also the i-th element in the rhs vector
-	  // auto qrule = fe.get_quadrature_rule();
-	  // FE_Function f(qrule.size()); // FE_Function on quadrature nodes
-	  // for(Index r=0; r<qrule.size(); r++) {
-	  //   const FiniteElement::POINT& P = qrule.nodes[r];
-	  //   f[i] = rhs_function(P.x, P.y);
-	  // }
-	  // b_r(i) = fe.integrate(f, phi[i]);
-	  Real det_jacobian = std::abs(fe.det_jacobian_affine_map());
-	  cout << "|det_jacobian|=" << det_jacobian << endl;
-	  b_r(i) = det_jacobian/18. * f_sum;
+	  auto qrule = fe.get_quadrature_rule();
+	  FE_Function f(qrule.size()); // FE_Function on quadrature nodes
+	  assert(qrule.size() == 3); // WARINING, assuming quadrature on triangle vertices
+	  for(Index r=0; r<qrule.size(); r++) {
+	    // const FiniteElement::POINT& hat_P = qrule.nodes[r];
+	    // const FiniteElement::POINT P =
+	    //   fe.apply_affine_map(hat_P); // Transform to "physical" triangle
+	    const FiniteElement::POINT& P = fe.get_vertex(r);
+	    f[r] = rhs_function(P.x, P.y);
+	  }
+	  b_r(i) = fe.integrate(f, phi[i]);
+	  // Real det_jacobian = std::abs(fe.det_jacobian_affine_map());
+	  // cout << "|det_jacobian|=" << det_jacobian << endl;
+	  // b_r(i) = (det_jacobian/18.) * f_sum;
 	  cout << "b_r(" << i << ")=" << b_r(i) << endl;
 	}
 
@@ -196,7 +203,7 @@ int main()
   // Save solution to file (so that it can be read by external tools
   // like FreeFem++)
   std::ofstream myfile;
-  std::string sol_filename = "sol_square_n=3.txt";
+  std::string sol_filename = "sol_square_N" + std::to_string(NINTERVALS) + ".txt";
   myfile.open (sol_filename);
   std::cout << "Writing solution to file: " << sol_filename << endl;
   myfile << u.size() << endl << u;

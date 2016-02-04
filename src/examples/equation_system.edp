@@ -1,4 +1,4 @@
-int N=3;
+int N=4;
 // mesh Th=square(N,N);
 // savemesh(Th,"nombre-malla.msh");
 
@@ -7,7 +7,7 @@ mesh Th=readmesh("square_" + N +".msh");
 fespace Vh(Th,P1);
 Vh uh, vh;
 func exactSolution = sin(pi*x)*sin(pi*y);
-func fRhs = 4; //2*pi*pi*sin(pi*x)*sin(pi*y);
+func fRhs = 2*pi*pi*sin(pi*x)*sin(pi*y);
 func fDirichlet=0;
 
 plot(Th);
@@ -28,28 +28,35 @@ uh[] = A^-1*b;  // Solve system
 
 // Imprimir la matriz. Como es una matriz dispersa, se imprime
 // como una lista  "i j A(i,j)"
-cout << "***Matrix:" << endl << A << endl;
-cout << "***rhs:" << endl << b << endl;
-cout << "***solution:" << endl << uh[] << endl;
+// cout << "***Matrix:" << endl << A << endl;
+// cout << "***rhs:" << endl << b << endl;
+// cout << "***solution:" << endl << uh[] << endl;
 
 Vh ue = exactSolution(x,y);
-cout << "***L2 error:" << sqrt(int2d(Th)(square(uh-ue))) << endl;
+cout << "*** L2 error:" << sqrt(int2d(Th)(square(uh-ue))) << " *** " << endl;
+cout << "*** H1 error:" << sqrt(int2d(Th)(square(dx(uh)-dx(ue)) + square(dy(uh)-dy(ue)))) << endl;
 
-plot(uh, fill=true, value=true, wait=1);
+// plot(uh, fill=true, value=true, wait=1);
 
 // Read and post-rocess an external solution (e.g. from shfem library)
 Vh uext;
-string solfile="sol_square_n=" + N + ".txt";
+string solfile="sol_square_N" + N + ".txt";
 ifstream ii(solfile);
 ii >> uext[];
-cout << "FreeFem++ solution: " << uh[] << endl;
-cout << "External solution: " << uext[] << endl;
-cout << "Diference with FreeFem++ solution (L2 norm): " <<
-  sqrt(int2d(Th)(square(uh-uext))) << endl;
+// cout << "FreeFem++ solution: " << uh[] << endl;
+// cout << "External solution: " << uext[] << endl;
+real uL2error = sqrt(int2d(Th)(square(ue-uext)));
+real uH1error = sqrt(int2d(Th)(square(dx(ue)-dx(uext)) + square(dy(ue)-dy(uext))));
+cout << "*** Diference with FreeFem++ solution (L2 norm): " <<
+  sqrt(int2d(Th)(square(uh-uext))) << " ***" << endl << endl;
+cout << "*** L2 error for external solution:" << endl <<
+  "uL2error = "<< uL2error << endl;
+cout << "*** H1 error for external solution:" << endl <<
+  "uH1error = "<< uH1error << endl;
 
 // Plot and save it to vtk (for further post-processing)
 // plot(uext, fill=true);
-
+cout << endl;
 load "iovtk";
 string vtkFile = "solution.vtk";
 savevtk(vtkFile, Th, uext, dataname="u");
