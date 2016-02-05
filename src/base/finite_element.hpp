@@ -1,8 +1,7 @@
 // finite_element.hpp ---
 
-// Copyright (C) 2015 Rafa Rodríguez Galván <rafaelDOTrodriguezATucaDOTes>
-
-// Author: Rafa Rodríguez Galván
+// Copyright (C) 2015-16 Rafa Rodríguez Galván <rafaelDOTrodriguezATucaDOTes>
+// Copyright (C) 2015-16 Roberto García Aragón
 
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -117,7 +116,6 @@ namespace shfem {
      */
     void reinit(const MESH& mesh, Index idx_cell) {
 
-      cout << "### reinit(idx_cell=" << idx_cell << ")" << endl;
       //,--------------------------------------------------
       //| Compute global index and coordinates for vertices
       //`--------------------------------------------------
@@ -140,7 +138,6 @@ namespace shfem {
       _dy_phi.resize(ndofs);
       for(Index i=0; i<ndofs; ++i)
 	{
-	  std::cout << "  ### idof=" << i << std::endl;
 	  Index nb_quad_nodes = _quadrature_rule->size();
 	  _phi[i].resize(nb_quad_nodes);
 	  _dx_phi[i].resize(nb_quad_nodes);
@@ -152,7 +149,6 @@ namespace shfem {
 	  // Loop on quadrature nodes
 	  for(Index j=0; j<nb_quad_nodes; ++j)
 	    {
-	      std::cout << "    ### jquad=" << j << std::endl;
 	      // Get quadrature node (at reference triangle)
 	      const POINT& hat_P_j = _quadrature_rule->nodes[j];
 	      // Apply reference basis function on that node
@@ -161,11 +157,9 @@ namespace shfem {
 	      POINT P;
 	      P.x = dx_hat_phi_i(hat_P_j.x, hat_P_j.y);
 	      P.y = dy_hat_phi_i(hat_P_j.x, hat_P_j.y);
-	      cout << "    ### gradient of hat_phi_i=(" << P.x << "," << P.y << ")" << endl;
 	      P = multiply_times_B_KminusT(P);
 	      _dx_phi[i][j] = P.x;
 	      _dy_phi[i][j] = P.y;
-	      cout << "    ### gradient of phi_i=(" << P.x << "," << P.y << ")" << endl;
 	    }
 	}
     }
@@ -424,17 +418,12 @@ namespace shfem {
     POINT multiply_times_B_KminusT(const POINT& P) const
     {
       Real x = P.x, y = P.y;
-      cout << "       Point =" << x << "," << y << endl;
       Real x0 = get_vertex0().x, y0 = get_vertex0().y;
       Real x1 = get_vertex1().x, y1 = get_vertex1().y;
       Real x2 = get_vertex2().x, y2 = get_vertex2().y;
-      cout << "       vertex 0=" << x0 << "," << y0 << endl;
-      cout << "       vertex 1=" << x1 << "," << y1 << endl;
-      cout << "       vertex 2=" << x2 << "," << y2 << endl;
       Real inv_det_B = 1.0/((x1-x0)*(y2-y0) - (y1-y0)*(x2-x0));
       Real tmpX = (  (y2-y0)*x - (y1-y0)*y )*inv_det_B;
       Real tmpY = ( -(x2-x0)*x + (x1-x0)*y )*inv_det_B;
-      cout << "      tmp =" << tmpX << "," << tmpY << endl;
       return POINT(tmpX, tmpY);
     }
 
@@ -467,29 +456,6 @@ namespace shfem {
       return _mesh.get_nver(); // P1 dofs match mesh vertices
     }
 
-    // /// Assemble the local vector "v_local" into global vector "v"
-    // template <class Vector> void assemble_vector(const Vector& v_local, Vector& v) const
-    // {
-    //   // For each cell, r:
-    //   for (Index r=0; r<_mesh.get_ncel(); ++r) {
-    // 	//,--------------------------------------------------
-    // 	//| Compute global index and coordinates for vertices
-    // 	//`--------------------------------------------------
-    // 	auto _cell = _mesh.get_cell(r);
-    // 	Index idv0 = _cell.idv0; // Global index for vertex 0
-    // 	Index idv1 = _cell.idv1; // Global index for vertex 1
-    // 	Index idv2 = _cell.idv2; // Global index for vertex 2
-    // 	const Index index_map[3] = {idv0, idv1, idv2};
-    // 	const Index ndofs = _cell.get_nver();
-    // 	assert(ndofs==3); // At least in current implementation
-    // 	for (Index i = 0; i < ndofs; ++i)
-    // 	  {
-    // 	    // Here we are assuming that class Vector implements
-    // 	    // operator()(int i) for accessing to the i-th element
-    // 	    v(index_map[i]) += v_local(i);
-    // 	  }
-    //   }
-    // }
 
     /// Assemble the local vector "v_local" (relative to Cell r) into global vector "v"
     template <class Vector> void add_local_vector(const Vector& v_local, Vector& v, Index r) const
@@ -512,36 +478,6 @@ namespace shfem {
 	}
     }
 
-    // template <class Matrix> void assemble_matrix(Matrix& M) const
-    // {
-    //   // Local matrix
-    //   Index ndofs = fe.get_ndofs();
-    //   MatrixXf A_r(ndofs,ndofs);
-    //   // For each cell, r:
-    //   for (Index r=0; r<_mesh.get_ncel(); ++r) {
-    // 	//,--------------------------------------------------
-    // 	//| Compute global index and coordinates for vertices
-    // 	//`--------------------------------------------------
-    // 	auto _cell = _mesh.get_cell(r);
-    // 	Index idv0 = _cell.idv0; // Global index for vertex 0
-    // 	Index idv1 = _cell.idv1; // Global index for vertex 1
-    // 	Index idv2 = _cell.idv2; // Global index for vertex 2
-    // 	const Index index_map[3] = {idv0, idv1, idv2};
-    // 	const Index ndofs = _cell.get_nver();
-    // 	assert(ndofs==3); // At least in current implementation
-    // 	for (Index i = 0; i < ndofs; ++i)
-    // 	  {
-    // 	    for (Index j = 0; j < ndofs; ++j)
-    // 	      {
-    // 		// Here we are assuming that class Matrix implements
-    // 		// operator()(int i,int j) for accessing to element (i,j)
-    // 		M(index_map[i], index_map[j]) += M_local(i,j);
-    // 	      }
-    // 	  }
-    //   }
-    // }
-
-
     /// Assemble the local matrix "M_local" (relative to Cell r) into global matrix "M"
     template <class Matrix> void add_local_matrix(const Matrix& M_local, Matrix& M, Index r) const
     {
@@ -549,7 +485,6 @@ namespace shfem {
       //| Compute global index and coordinates for vertices
       //`--------------------------------------------------
       auto _cell = _mesh.get_cell(r);
-      cout << "DEBUG: cell r=" << r << endl;
       Index idv0 = _cell.idv0; // Global index for vertex 0
       Index idv1 = _cell.idv1; // Global index for vertex 1
       Index idv2 = _cell.idv2; // Global index for vertex 2
@@ -558,16 +493,11 @@ namespace shfem {
       assert(ndofs==3); // At least in current implementation
       for (Index i = 0; i < ndofs; ++i)
 	{
-	  cout << "  DEBUG: local index i = " << i
-	       << " (global index = "<< index_map[i] << ")" << endl;
 	  for (Index j = 0; j < ndofs; ++j)
 	    {
-	      cout << "    DEBUG: local indices (i,j) = (" << i << "," << j
-		   << "), global indices = ("<< index_map[i] << "," << index_map[j] << ")" << endl;
 	      // Here we are assuming that class Matrix implements
 	      // operator()(int i,int j) for accessing to element (i,j)
 	      M(index_map[i], index_map[j]) += M_local(i,j);
-	      cout << "      DEBUG added local matrix value: " << M_local(i,j) << endl;
 	    }
 	}
     }
@@ -583,17 +513,12 @@ namespace shfem {
     template<class Matrix, class Vector>
     void apply_dirichlet_conditions(const DirichletConditions& dirichlet, Matrix& A, Vector& b)
     {
-      std::cout << "Applying boundary conditions" << std::endl;
-      std::cout << b;
       for(Index i=0; i<get_ndofs(); i++) {
 	Index label = _mesh.get_label(i);
-	std::cout << "Index " << i << ", label " << label << std::endl;
 	if(label) { // Assuming boundary label == 0 for interior nodes
 	  for(auto it = dirichlet.begin(); it != dirichlet.end(); ++it)
 	    {
 	      if (it->first == label) {  // Apply boundary condition
-		std::cout << "  ... blocking node " << i << " with boundary condition "
-			  << label << std::endl;
 		// Block i-th row of A and b
 		A(i,i) = TGV; // Huge value
 		auto& P = _mesh.get_vertex(i);
@@ -606,7 +531,6 @@ namespace shfem {
 	    }
 	}
       }
-      std::cout << b;
     }
   private:
     // We do not need storing pointers or refferences because we

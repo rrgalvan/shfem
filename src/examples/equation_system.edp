@@ -1,7 +1,4 @@
-int N=4;
-// mesh Th=square(N,N);
-// savemesh(Th,"nombre-malla.msh");
-
+int N=64;
 mesh Th=readmesh("square_" + N +".msh");
 
 fespace Vh(Th,P1);
@@ -59,4 +56,4 @@ cout << "*** H1 error for external solution:" << endl <<
 cout << endl;
 load "iovtk";
 string vtkFile = "solution.vtk";
-savevtk(vtkFile, Th, uext, dataname="u");
+// savevtk(vtkFile, Th, uext, dataname="u");

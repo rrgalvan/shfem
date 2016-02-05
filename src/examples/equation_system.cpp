@@ -1,8 +1,7 @@
 // equation_system.cpp ---
 
-// Copyright (C) 2015 Rafa Rodríguez Galván <rafaelDOTrodriguezATucaDOTes>
-
-// Author: Rafa Rodríguez Galván
+// Copyright (C) 2015-16 Rafa Rodríguez Galván <rafaelDOTrodriguezATucaDOTes>
+// Copyright (C) 2015-16 Roberto García Aragón
 
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -32,8 +31,6 @@ Real rhs_function(Real x, Real y) {
   // Right hand side function
   // return 4; // Exact solution: u = 1-x^2-y^2 in Omega=unit_circle
   const double PI = 3.1415926535;
-  cout << "::: x=" << x << ", y=" << y << ", f="
-       << 2*PI*PI*sin(PI*x)*sin(PI*y) << endl;
   return(2*PI*PI*sin(PI*x)*sin(PI*y));
 }
 
@@ -65,12 +62,10 @@ int main()
   Index N = fe_space.get_ndofs();
   Eigen::MatrixXf A(N, N);
   for(Index i=0; i<N; i++) for(Index j=0; j<N; j++) A(i,j)=0.;
-  cout << "Previous A: " << A << endl;
 
   // Global finite element rhs vector
   Eigen::VectorXf b(N);
   for(Index i=0; i<N; i++) b(i)=0.;
-  cout << "Previous b: " << b << endl;
 
   // Start chronometer
   auto start = std::chrono::high_resolution_clock::now();
@@ -87,44 +82,12 @@ int main()
       // Get also y-derivatives of basis functions
       const std::vector<FE_Function>& dy_phi = fe.get_dy_phi();
 
-      // // BORRAR
-      // cout << endl;
-      // for(int i=0; i<2; i++) cout << "," << dx_phi[0][i];
-      // cout << endl;
-      // for(int i=0; i<2; i++) cout << "," << dy_phi[0][i];
-
-      // cout << endl;
-      // for(int i=0; i<2; i++) cout << "," << dx_phi[1][i];
-      // cout << endl;
-      // for(int i=0; i<2; i++) cout << "," << dy_phi[1][i];
-
-      // cout << endl;
-      // for(int i=0; i<2; i++) cout << "," << dx_phi[2][i];
-      // cout << endl;
-      // for(int i=0; i<2; i++) cout << "," << dy_phi[2][i];
-
-      // cout << endl;
-
       // Local stiffness matrix
       Index ndofs = fe.get_ndofs();
       Eigen::MatrixXf A_r(ndofs,ndofs);
 
       // Local rhs vector
       Eigen::VectorXf b_r(ndofs);
-
-      // Sum of f(p_i) where p_i are the three vertices of
-      // the triangle.
-      // [WARNING]
-      /// Only for P1 elements on triangles!!
-      // See [F. J. Sayas, A gentle introduction to the Finite Element Method]
-      // [WARNING]      _cell = &mesh.get_cell(idx_cell);
-      // assert(ndofs == 3);
-      // Real f_sum = 0;
-      // for(Index i=0; i<3; i++) {
-      // 	const FiniteElement::POINT& P = fe.get_vertex(i);
-      // 	f_sum += rhs_function(P.x, P.y);
-      // 	cout << "r=" << r << "f_sum=" << f_sum << endl;
-      // }
 
       // For each degree of freedom, ii
       for (Index i = 0; i < ndofs; ++i)
@@ -154,23 +117,11 @@ int main()
 	    f[r] = rhs_function(P.x, P.y);
 	  }
 	  b_r(i) = fe.integrate(f, phi[i]);
-	  // Real det_jacobian = std::abs(fe.det_jacobian_affine_map());
-	  // cout << "|det_jacobian|=" << det_jacobian << endl;
-	  // b_r(i) = (det_jacobian/18.) * f_sum;
-	  cout << "b_r(" << i << ")=" << b_r(i) << endl;
 	}
-
       // Add local matrix A_r into global matrix A
       fe_space.add_local_matrix(A_r, A, r);
-
-
-      cout << "Previous rhs: " << b << endl;
-      cout << "Element r=" << r << ", adding to rhs:" << b_r << endl;
       // Add local vector b_r into global rhs vector b
       fe_space.add_local_vector(b_r, b, r);
-
-      cout << "Resulting rhs: " << b << endl;
-
     }
 
   // Print matrix and vector assembiling time
@@ -195,18 +146,32 @@ int main()
   std::cout << "Dirichlet conditions assembling time: " << elapsed_time << " miliseconds" << std::endl;
 
   // Print equations system
-  std::cout << "Resulting matrix:" << std::endl << A << std::endl;
-  std::cout << "Resulting vector:" << std::endl << b << std::endl;
+  bool print_linear_system = false;
+  bool print_soluton = false;
+  bool save_to_file = false;
+  if(print_linear_system) {
+    std::cout << "Resulting matrix:" << std::endl << A << std::endl;
+    std::cout << "Resulting vector:" << std::endl << b << std::endl;
+  }
+  // Solve linear system
   Eigen::VectorXf u =  A.partialPivLu().solve(b);
-  std::cout << "Solution: " << u << std::endl;
+  // Print solution
+  if(print_soluton) std::cout << "Solution: " << u << std::endl;
+  auto solve_time = std::chrono::high_resolution_clock::now();
+  elapsed_time =
+    std::chrono::duration_cast<std::chrono::milliseconds>( solve_time -
+							   end_dirichlet_time ).count();
+  std::cout << "Solving time: " << elapsed_time << " miliseconds" << std::endl;
 
   // Save solution to file (so that it can be read by external tools
   // like FreeFem++)
-  std::ofstream myfile;
-  std::string sol_filename = "sol_square_N" + std::to_string(NINTERVALS) + ".txt";
-  myfile.open (sol_filename);
-  std::cout << "Writing solution to file: " << sol_filename << endl;
-  myfile << u.size() << endl << u;
-  myfile.close();
+  if(save_to_file) {
+    std::ofstream myfile;
+    std::string sol_filename = "sol_square_N" + std::to_string(NINTERVALS) + ".txt";
+    myfile.open (sol_filename);
+    std::cout << "Writing solution to file: " << sol_filename << endl;
+    myfile << u.size() << endl << u;
+    myfile.close();
+  }
   return 0;
 }

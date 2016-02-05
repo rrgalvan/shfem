@@ -1,8 +1,7 @@
 // integrate.cpp ---
 
 // Copyright (C) 2015 Rafa Rodríguez Galván <rafaelDOTrodriguezATucaDOTes>
-
-// Author: Rafa Rodríguez Galván
+// Copyright (C) 2015-16 Roberto García Aragón
 
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
